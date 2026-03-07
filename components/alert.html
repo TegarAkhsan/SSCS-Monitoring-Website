@@ -1,0 +1,50 @@
+<!-- ================= ALERT ================= -->
+<div id="alert" class="page">
+    <div class="container">
+        <h2>PSC Control Room - Alert Monitoring</h2>
+        <div class="alert-summary">
+            <div class="summary-card">
+                <h4>Total Alert</h4>
+                <p id="totalAlert">0</p>
+            </div>
+            <div class="summary-card">
+                <h4>Active Alert</h4>
+                <p id="activeAlert">0</p>
+            </div>
+            <div class="summary-card">
+                <h4>Critical</h4>
+                <p id="criticalAlert">0</p>
+            </div>
+        </div>
+
+        <h3>Active Alert</h3>
+        <table class="alert-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Kapal</th>
+                    <th>IMO</th>
+                    <th>Jenis</th>
+                    <th>Level</th>
+                    <th>Waktu</th>
+                    <th>Durasi</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="alertList"></tbody>
+        </table>
+
+        <h3 style="margin-top:30px;">Alert History</h3>
+        <table class="alert-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Kapal</th>
+                    <th>Level</th>
+                    <th>Resolved At</th>
+                </tr>
+            </thead>
+            <tbody id="alertHistoryList"></tbody>
+        </table>
+    </div>
+</div>

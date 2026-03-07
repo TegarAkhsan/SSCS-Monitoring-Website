@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Sistem Monitoring Energi</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- LEFT SIDE -->
+        <div class="left-panel">
+
+            <!-- Logo di kiri atas -->
+            <div class="instansi-logo">
+                <img src="logopsc.png" alt="Logo Instansi">
+                <span>Power Shore Connection</span>
+            </div>
+
+            <div class="overlay">
+                <h1>Selamat Datang</h1>
+                <p>
+                    Sistem Monitoring Energi Terintegrasi Nasional.
+                    Pantau konsumsi energi secara real-time dan aman.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="right-panel">
+            <div class="login-box">
+                <h2>Log in</h2>
+
+                <form id="loginForm">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username" required>
+
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password" required>
+
+                    <div class="options">
+                        <a href="#">Lupa Password?</a>
+                    </div>
+
+                    <button type="submit" class="login-btn">Login</button>
+                    <p id="loginError">Username atau password salah</p>
+                </form>
+
+                <p class="footer-text">© Politeknik Pelayaran Surabaya 2026</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="login.js"></script>
+</body>
+
+</html>

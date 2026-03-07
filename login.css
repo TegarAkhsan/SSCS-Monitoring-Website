@@ -1,0 +1,207 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  height:100vh;
+  background:#0b1f3a;
+}
+
+/* MAIN CONTAINER */
+.container{
+  display:flex;
+  height:100vh;
+}
+
+/* LEFT PANEL */
+.left-panel{
+  flex:1;
+  background:
+    linear-gradient(rgba(0,48,135,0.85), rgba(0,48,135,0.95)),
+    url('https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80');
+  background-size:cover;
+  background-position:center;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:60px;
+}
+
+.overlay h1{
+  font-size:48px;
+  margin-bottom:20px;
+}
+
+.overlay p{
+  font-size:16px;
+  margin-bottom:30px;
+  max-width:400px;
+  line-height:1.6;
+}
+
+.demo-btn{
+  padding:12px 25px;
+  border:none;
+  border-radius:30px;
+  background:white;
+  color:#003087;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.demo-btn:hover{
+  background:#e6e6e6;
+}
+
+/* RIGHT PANEL */
+.right-panel{
+  flex:1;
+  background:#0f172a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.login-box{
+  width:380px;
+  color:white;
+}
+
+.login-box h2{
+  margin-bottom:30px;
+  font-size:28px;
+}
+
+/* FORM */
+form label{
+  font-size:14px;
+}
+
+form input{
+  width:100%;
+  padding:12px;
+  margin:8px 0 20px;
+  border-radius:8px;
+  border:none;
+  background:#1e293b;
+  color:white;
+}
+
+form input:focus{
+  outline:2px solid #2563eb;
+}
+
+.options{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+  margin-bottom:20px;
+}
+
+.options a{
+  color:#3b82f6;
+  text-decoration:none;
+}
+
+.login-btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#2563eb;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.login-btn:hover{
+  background:#1d4ed8;
+}
+
+#loginError{
+  color:#ff4d4d;
+  display:none;
+  margin-top:10px;
+}
+
+.footer-text{
+  margin-top:30px;
+  font-size:12px;
+  opacity:0.6;
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .left-panel{
+    display:none;
+  }
+  .right-panel{
+    flex:1;
+  }
+}
+
+/* LOGO INSTANSI */
+.instansi-logo{
+  position:absolute;
+  top:30px;
+  left:40px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.instansi-logo img{
+  width:80px;
+}
+
+.instansi-logo span{
+  font-size:18px;
+  font-weight:600;
+  color:white;
+}
+
+/* SOCIAL LOGIN */
+.social-login{
+  margin-top:30px;
+  text-align:center;
+}
+
+.social-login p{
+  font-size:13px;
+  margin-bottom:15px;
+  opacity:0.7;
+}
+
+.social-icons{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+}
+
+.icon{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+/* Warna masing-masing */
+.fb{ background:#1877f2; }
+.tw{ background:#1da1f2; }
+.google{ background:#ea4335; }
+.linkedin{ background:#0a66c2; }
+
+.icon:hover{
+  transform:translateY(-3px);
+}

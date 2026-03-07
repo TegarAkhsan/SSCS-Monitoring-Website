@@ -1,0 +1,23 @@
+<!-- ================= PLANNING ================= -->
+<div id="planning" class="page">
+    <div class="container">
+        <h2>Planning Sandar Kapal</h2>
+        <div class="planning-form">
+            <input type="text" id="planShipName" placeholder="Nama Kapal">
+            <select id="planDermaga">
+                <option value="">Pilih Dermaga</option>
+                <option value="DL">Dalam Lama (DL)</option>
+                <option value="DB">Dalam Baru (DB)</option>
+                <option value="LL">Luar Lama (LL)</option>
+                <option value="LB">Luar Baru (LB)</option>
+            </select>
+            <input type="datetime-local" id="planDate">
+            <button onclick="addPlanning()">Tambah Planning</button>
+        </div>
+
+        <div class="planning-list">
+            <h3>Daftar Planning</h3>
+            <ul id="planningList"></ul>
+        </div>
+    </div>
+</div>

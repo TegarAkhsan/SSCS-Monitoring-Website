@@ -1,0 +1,28 @@
+<!-- ================= LAPORAN ================= -->
+<div id="laporan" class="page">
+    <div class="container">
+        <h2>Laporan Data Kapal</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Cari dan pilih kapal untuk mengunduh laporan.</p>
+
+        <input type="text" id="searchReportShip" placeholder="Cari Nama Kapal atau IMO..." onkeyup="filterReportShips()"
+            style="width: 100%; max-width: 400px; margin-bottom: 20px;">
+        <button onclick="downloadReport()"
+            style="padding: 10px 15px; background: #0ea5e9; color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">Unduh
+            Laporan Semua Kapal (24 Jam)</button>
+
+        <table class="data-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background-color: #0f172a; color: white; text-align: left;">
+                    <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">No</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">Nama Kapal</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">IMO</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">Tipe</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #e2e8f0; text-align: center;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="reportShipCardsContainer">
+                <!-- Data will be populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>

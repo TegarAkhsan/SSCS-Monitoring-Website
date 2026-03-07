@@ -1,0 +1,42 @@
+<!-- ================= HISTORY ================= -->
+<div id="history" class="page">
+    <div class="container">
+        <h2>Done Activities</h2>
+        <div class="history-summary">
+
+            <div class="summary-card">
+                <h4>Total Transaksi</h4>
+                <p id="totalTransaksi">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h4>Total Energi</h4>
+                <p id="totalEnergiHistory">0 kWh</p>
+            </div>
+
+            <div class="summary-card">
+                <h4>Total CO₂ Reduction</h4>
+                <p id="totalCO2History">0 kg</p>
+            </div>
+
+        </div>
+
+        <input type="date" id="filterDate" onchange="renderHistory()" style="margin-bottom:15px;">
+        <div class="history-table-wrapper">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Kapal</th>
+                        <th>IMO</th>
+                        <th>Waktu</th>
+                        <th>Energi (kWh)</th>
+                        <th>CO₂ (kg)</th>
+                        <th>Status PSC</th>
+                    </tr>
+                </thead>
+                <tbody id="historyList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>

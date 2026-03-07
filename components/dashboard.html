@@ -1,0 +1,58 @@
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard" class="page">
+    <div class="container">
+        <h2 style="margin-bottom: 15px;">Monitoring Dashboard</h2>
+        <div
+            style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p><strong>Nama Kapal:</strong> <span id="shipName">-</span></p>
+                <p><strong>Tipe:</strong> <span id="shipType">-</span></p>
+                <p><strong>IMO:</strong> <span id="shipIMO">-</span></p>
+            </div>
+            <button onclick="showPage('shiplist')"
+                style="padding: 10px 15px; background: #0ea5e9; color: white; border: none; border-radius: 6px; cursor: pointer;">Ganti
+                Kapal</button>
+        </div>
+
+        <div class="cards">
+
+            <div class="card">
+                <h3>Status PSC</h3>
+                <h2 id="pscStatus">Disconnected</h2>
+                <span id="pscStatusIndicator" class="danger">Bahaya</span>
+            </div>
+
+            <div class="card">
+                <h3>Total Energi (Real-Time)</h3>
+                <h2 id="realtimeEnergy">0 kWh</h2>
+            </div>
+
+            <div class="card">
+                <h3>Total Energi</h3>
+                <h2 id="totalEnergy">0 kWh</h2>
+            </div>
+
+            <div class="card">
+                <h3>Kapal Terhubung</h3>
+                <h2 id="kapalTerhubung">0 Kapal</h2>
+            </div>
+
+            <div class="card">
+                <h3>Alert</h3>
+                <h2 id="alertCount">0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Estimasi Pengurangan Emisi CO₂</h3>
+                <h2 id="co2Saved">0 kg</h2>
+            </div>
+
+        </div>
+
+        <div class="chart-box">
+            <h3>Grafik Konsumsi Energi (kWh)</h3>
+            <canvas id="dashboardChart"></canvas>
+        </div>
+
+    </div>
+</div>
