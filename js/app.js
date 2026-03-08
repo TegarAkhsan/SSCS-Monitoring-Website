@@ -44,7 +44,7 @@ async function loadComponents() {
     }
 }
 
-function showPage(pageId) {
+function showPage(pageId, pushState = true) {
     document.querySelectorAll('.page').forEach(p => {
         p.classList.remove('active');
     });
@@ -58,7 +58,20 @@ function showPage(pageId) {
     });
     const activeLink = document.getElementById(`nav-${pageId}`);
     if (activeLink) activeLink.classList.add('active');
+
+    // Update URL hash without reloading the page
+    if (pushState) {
+        window.history.pushState(null, "", "#" + pageId);
+    }
 }
+
+// Handle browser Back/Forward navigation
+window.addEventListener("hashchange", () => {
+    let hash = window.location.hash.substring(1).split('?')[0];
+    if (componentsToLoad.includes(hash)) {
+        showPage(hash, false);
+    }
+});
 
 // ===============================
 // SHIP LIST & SELECTION
@@ -138,6 +151,14 @@ function selectShip(imo) {
 window.onload = async function () {
     await loadComponents();
 
+    // Load page from URL hash, default to dashboard
+    let hash = window.location.hash.substring(1).split('?')[0];
+    if (componentsToLoad.includes(hash)) {
+        showPage(hash, false); // false to avoid unnecessary pushState on load
+    } else {
+        showPage('dashboard', false);
+    }
+
     const dashCtx = document.getElementById("dashboardChart");
     if (dashCtx) {
         dashboardChart = new Chart(dashCtx, {
@@ -214,6 +235,12 @@ function startEnergySimulation() {
 
             // ADD TO HISTORY BACKGROUND
             addHistory(ship.imo, value, connected);
+
+            // ALERT CONDITION FOR EVERY SHIP
+            if (value > 240) {
+                // generateAlert checks if it already exists or not. Currently generates a new alert.
+                generateAlert(value, ship.imo);
+            }
         });
 
         // UPDATE UI FOR SELECTED SHIP
@@ -277,13 +304,13 @@ function startEnergySimulation() {
                 monitoringChart.update();
             }
 
-            // ALERT CONDITION
+            // POPUP ALERT CONDITION
             if (value > 240) {
-                generateAlert(value, selectedIMO);
+                // If the selected ship has an alert, show the popup
                 showAlert();
             }
 
-            // UPDATE DASHBOARD ALERT COUNT
+            // UPDATE DASHBOARD ALERT COUNT FOR SPECIFIC SHIP
             const dashAlertCount = document.getElementById("alertCount");
             if (dashAlertCount) {
                 const activeAlertsForShip = alertData.filter(a => a.imo === selectedIMO && a.status === "Active").length;
@@ -334,8 +361,15 @@ function generateAlert(value, imo) {
         return; // no alert
     }
 
+    // Check if there is already an active alert for this ship with the same level
+    const existingAlert = alertData.find(a => a.imo === imo && a.status === "Active" && a.level === level);
+    if (existingAlert) {
+        // Already active, do not flood the array
+        return;
+    }
+
     const alertItem = {
-        id: "ALT-" + Date.now(),
+        id: "ALT-" + Date.now() + Math.floor(Math.random() * 1000), // added randomizer for unique keys
         ship: ship.name,
         imo: ship.imo,
         jenis: jenis,
@@ -364,13 +398,22 @@ function renderAlert() {
 
         const row = document.createElement("tr");
 
+        let levelStyle = "font-weight: 600; ";
+        if (item.level === "Critical") levelStyle += "color: #dc2626;";
+        else if (item.level === "High") levelStyle += "color: #ef4444;";
+        else if (item.level === "Medium") levelStyle += "color: #f59e0b;";
+
         row.innerHTML = `
             <td>${item.id}</td>
-            <td>${item.ship}</td>
+            <td><span style="font-weight: 600; color: #1e293b;">${item.ship}</span></td>
             <td>${item.imo}</td>
             <td>${item.jenis}</td>
-            <td class="level-${item.level.toLowerCase()}">${item.level}</td>
+            <td style="${levelStyle}">${item.level}</td>
             <td>${item.status}</td>
+            <td>-</td>
+            <td>
+                <button style="background: #f1f5f9; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Detail</button>
+            </td>
         `;
 
         tbody.appendChild(row);
@@ -493,18 +536,29 @@ function addPlanning() {
         return;
     }
 
-    planningData.push({ name, dermaga, date });
+    // Format Date safely
+    const formattedDate = date.replace("T", " ");
+
+    planningData.push({ name, dermaga, date: formattedDate });
 
     const list = document.getElementById("planningList");
     list.innerHTML = "";
 
     planningData.forEach(p => {
         const li = document.createElement("li");
-        li.innerText = `${p.name} - ${p.dermaga} - ${p.date}`;
+        li.className = "planning-card";
+        li.innerHTML = `
+            <div>
+                <h4 style="color: #1e293b; margin-bottom: 5px; font-size: 16px;">${p.name}</h4>
+                <p style="color: #64748b; font-size: 13px;"><i class="fa-solid fa-location-dot" style="margin-right: 5px;"></i> ${p.dermaga} &nbsp;|&nbsp; <i class="fa-regular fa-clock" style="margin-left: 5px; margin-right: 5px;"></i> ${p.date}</p>
+            </div>
+            <span class="planning-status">Scheduled</span>
+        `;
         list.appendChild(li);
     });
 
     document.getElementById("planShipName").value = "";
+    document.getElementById("planDermaga").value = "";
     document.getElementById("planDate").value = "";
 }
 
@@ -522,16 +576,15 @@ function renderReportShipList(filter = "") {
         }
 
         const tr = document.createElement("tr");
-        tr.style.borderBottom = "1px solid #f1f5f9";
 
         tr.innerHTML = `
-            <td style="padding: 12px;">${index + 1}</td>
-            <td style="padding: 12px; font-weight: 600;">${ship.name}</td>
-            <td style="padding: 12px;">${ship.imo}</td>
-            <td style="padding: 12px;">${ship.type}</td>
-            <td style="padding: 12px; text-align: center;">
-                <button onclick="downloadShipReport('${ship.imo}')" style="background: #10b981; color: white; padding: 6px 12px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                    Unduh
+            <td>${index + 1}</td>
+            <td style="font-weight: 600; color: #1e293b;">${ship.name}</td>
+            <td>${ship.imo}</td>
+            <td>${ship.type}</td>
+            <td style="text-align: center;">
+                <button onclick="downloadShipReport('${ship.imo}')" style="background: #10b981; color: white; padding: 6px 12px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                    <i class="fa-solid fa-download" style="margin-right: 5px;"></i> Unduh
                 </button>
             </td>
         `;
