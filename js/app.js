@@ -28,7 +28,7 @@ const ships = [
 // ===============================
 // NAVIGATION & COMPONENT LOADING
 // ===============================
-const componentsToLoad = ['navbar', 'shiplist', 'dashboard', 'monitoring', 'history', 'alert', 'laporan', 'planning'];
+const componentsToLoad = ['navbar', 'dashboard', 'monitoring', 'history', 'alert', 'laporan', 'planning'];
 
 async function loadComponents() {
     for (const comp of componentsToLoad) {
@@ -53,7 +53,7 @@ function showPage(pageId) {
     if (target) target.classList.add('active');
 
     // Update active state in the navbar
-    document.querySelectorAll('.nav-menu a').forEach(link => {
+    document.querySelectorAll('.sidebar-menu a').forEach(link => {
         link.classList.remove('active');
     });
     const activeLink = document.getElementById(`nav-${pageId}`);
@@ -63,28 +63,44 @@ function showPage(pageId) {
 // ===============================
 // SHIP LIST & SELECTION
 // ===============================
+let selectedShipImo = null;
+
 function renderShipList() {
     const container = document.getElementById("shipCardsContainer");
     if (!container) return;
 
     container.innerHTML = "";
     ships.forEach(ship => {
+        const isActive = ship.imo === selectedShipImo;
         const card = document.createElement("div");
-        card.className = "card";
-        card.style.cursor = "pointer";
+
+        // Base styles
+        let baseStyle = "padding: 15px; background: white; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center;";
+        let borderStyle = isActive ? "border: 2px solid #256b9c; box-shadow: 0 0 8px rgba(37, 107, 156, 0.2);" : "border: 1px solid #e2e8f0;";
+
+        card.style.cssText = baseStyle + borderStyle;
+
+        if (!isActive) {
+            card.onmouseover = () => card.style.borderColor = "#256b9c";
+            card.onmouseleave = () => card.style.borderColor = "#e2e8f0";
+        }
+
         card.onclick = () => selectShip(ship.imo);
 
+        // Calculate current connection status from state
+        let statusDot = `<span style="width: 8px; height: 8px; background: #cbd5e1; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>`;
+        if (shipStates[ship.imo] && shipStates[ship.imo].connected) {
+            statusDot = `<span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>`;
+        } else if (shipStates[ship.imo] && !shipStates[ship.imo].connected && shipStates[ship.imo].totalEnergy > 0) {
+            statusDot = `<span style="width: 8px; height: 8px; background: #dc2626; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>`;
+        }
+
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="margin-bottom: 5px;">${ship.name}</h3>
-                    <p style="color: #64748b; font-size: 14px;">IMO: ${ship.imo}</p>
-                    <p style="color: #64748b; font-size: 14px;">Tipe: ${ship.type}</p>
-                </div>
-                <div style="background: #0ea5e9; color: white; padding: 8px 12px; border-radius: 6px; font-size: 14px;">
-                    Pilih
-                </div>
+            <div>
+                <h4 style="margin-bottom: 4px; color: ${isActive ? '#256b9c' : '#0f172a'}; font-size: 15px;">${statusDot}${ship.name}</h4>
+                <p style="color: #64748b; font-size: 12px; margin-left: 13px;">IMO: ${ship.imo}</p>
             </div>
+            <i class="fa-solid fa-chevron-right" style="color: ${isActive ? '#256b9c' : '#cbd5e1'}; font-size: 14px;"></i>
         `;
         container.appendChild(card);
     });
@@ -105,19 +121,14 @@ function selectShip(imo) {
         document.getElementById("totalEnergy").innerText = totalEnergy.toLocaleString() + " kWh";
         document.getElementById("co2Saved").innerText = (totalEnergy * 0.0027).toFixed(2) + " kg";
 
-        // CLEAR CHARTS SO THEY DON'T JUMP ABRUPTLY
-        if (dashboardChart) {
-            dashboardChart.data.labels = [];
-            dashboardChart.data.datasets[0].data = [];
-            dashboardChart.update();
-        }
-        if (monitoringChart) {
-            monitoringChart.data.labels = [];
-            monitoringChart.data.datasets[0].data = [];
-            monitoringChart.update();
-        }
+        // Optional: Ensure chart smoothly transitions instead of jumping
+        // Since active connection handles pushing new data each tick, switching ship
+        // implicitly continues chart data (it won't clear history)
 
-        showPage('dashboard');
+        selectedShipImo = imo; // Save selected ship ID
+        renderShipList(); // Re-render to show active stylistic state
+
+        // Removed showPage('dashboard') since we are already on that layout
     }
 }
 
@@ -170,6 +181,7 @@ window.onload = async function () {
     // Initialize Ship List
     renderShipList();
     renderReportShipList();
+    setTimeout(renderHistoryShipFilter, 500); // delay to ensure history component loaded
 
     startEnergySimulation();
 };
@@ -279,9 +291,25 @@ function startEnergySimulation() {
             }
         }
 
-        // UPDATE GLOBAL KAPAL TERHUBUNG
+        // UPDATE GLOBAL KAPAL TERHUBUNG & GLOBAL EMISI
         const kapalTerhubung = document.getElementById("kapalTerhubung");
         if (kapalTerhubung) kapalTerhubung.innerText = activeConnections + " Kapal";
+        const globalKapalTerhubung = document.getElementById("globalKapalTerhubung");
+        if (globalKapalTerhubung) globalKapalTerhubung.innerText = activeConnections;
+
+        let totalGlobalEnergy = 0;
+        Object.values(shipStates).forEach(state => {
+            totalGlobalEnergy += state.totalEnergy;
+        });
+
+        const globalCO2Saved = document.getElementById("globalCO2Saved");
+        if (globalCO2Saved) {
+            const globalCO2 = (totalGlobalEnergy * 0.0027).toFixed(2);
+            globalCO2Saved.innerText = globalCO2 + " kg";
+        }
+
+        // Re-render ship list periodically to update status dots
+        renderShipList();
 
     }, 3000);
 }
@@ -407,20 +435,25 @@ function renderHistory() {
     if (!tbody) return;
 
     const filterDate = document.getElementById("filterDate")?.value || "";
+    const filterShipIMO = document.getElementById("filterShip")?.value || "";
 
     tbody.innerHTML = "";
 
     let totalEnergi = 0;
     let totalCO2 = 0;
 
-    const filteredData = historyData.filter(item =>
-        !filterDate || item.dateOnly === filterDate
-    );
+    const filteredData = historyData.filter(item => {
+        const matchDate = !filterDate || item.dateOnly === filterDate;
+        const matchShip = !filterShipIMO || item.imo === filterShipIMO;
+        return matchDate && matchShip;
+    });
 
-    filteredData.slice(-30).reverse().forEach((item, index) => {
-
+    filteredData.forEach(item => {
         totalEnergi += Number(item.energy);
         totalCO2 += Number(item.co2);
+    });
+
+    filteredData.slice(-30).reverse().forEach((item, index) => {
 
         const row = document.createElement("tr");
 
@@ -503,6 +536,19 @@ function renderReportShipList(filter = "") {
             </td>
         `;
         container.appendChild(tr);
+    });
+}
+
+function renderHistoryShipFilter() {
+    const filterShip = document.getElementById("filterShip");
+    if (!filterShip) return;
+
+    filterShip.innerHTML = '<option value="">Semua Kapal</option>';
+    ships.forEach(ship => {
+        const option = document.createElement("option");
+        option.value = ship.imo;
+        option.innerText = ship.name;
+        filterShip.appendChild(option);
     });
 }
 

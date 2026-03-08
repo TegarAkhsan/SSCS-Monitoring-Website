@@ -1,207 +1,341 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI', sans-serif;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-body{
-  height:100vh;
-  background:#0b1f3a;
+body {
+  height: 100vh;
+  background: #1e3a5f;
+  background-image: linear-gradient(rgba(30, 58, 95, 0.8), rgba(30, 58, 95, 0.9)), url('assets/img/Port.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* MAIN CONTAINER */
-.container{
-  display:flex;
-  height:100vh;
+.login-page-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
-/* LEFT PANEL */
-.left-panel{
-  flex:1;
-  background:
-    linear-gradient(rgba(0,48,135,0.85), rgba(0,48,135,0.95)),
-    url('https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80');
-  background-size:cover;
-  background-position:center;
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:60px;
+.login-card-container {
+  display: flex;
+  width: 100%;
+  max-width: 1000px;
+  height: 600px;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-.overlay h1{
-  font-size:48px;
-  margin-bottom:20px;
+/* LEFT PANEL (Blue Side) */
+.left-panel {
+  flex: 1;
+  background: #256b9c;
+  /* The exact blue from the screenshot */
+  color: white;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
 }
 
-.overlay p{
-  font-size:16px;
-  margin-bottom:30px;
-  max-width:400px;
-  line-height:1.6;
+/* Subtle map overlay effect if needed */
+.left-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" opacity="0.1"><rect width="100%" height="100%" fill="none"/></svg>');
+  /* Placeholder for map texture */
+  opacity: 0.1;
+  pointer-events: none;
 }
 
-.demo-btn{
-  padding:12px 25px;
-  border:none;
-  border-radius:30px;
-  background:white;
-  color:#003087;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.3s;
+.left-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 1;
 }
 
-.demo-btn:hover{
-  background:#e6e6e6;
+.logo-danantara {
+  height: 30px;
+  filter: brightness(0) invert(1);
+  object-fit: contain;
 }
 
-/* RIGHT PANEL */
-.right-panel{
-  flex:1;
-  background:#0f172a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.logo-pelindo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-.login-box{
-  width:380px;
-  color:white;
+.logo-pelindo i {
+  font-size: 20px;
+  margin-bottom: 2px;
 }
 
-.login-box h2{
-  margin-bottom:30px;
-  font-size:28px;
+.logo-pelindo span {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
-/* FORM */
-form label{
-  font-size:14px;
+.logo-pelindo small {
+  font-size: 8px;
+  letter-spacing: 2px;
 }
 
-form input{
-  width:100%;
-  padding:12px;
-  margin:8px 0 20px;
-  border-radius:8px;
-  border:none;
-  background:#1e293b;
-  color:white;
+.feature-list-container {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 30px;
+  margin-top: auto;
+  margin-bottom: auto;
+  z-index: 1;
 }
 
-form input:focus{
-  outline:2px solid #2563eb;
+.feature-list {
+  list-style: none;
 }
 
-.options{
-  display:flex;
-  justify-content:space-between;
-  font-size:13px;
-  margin-bottom:20px;
+.feature-list li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 15px;
 }
 
-.options a{
-  color:#3b82f6;
-  text-decoration:none;
+.feature-list li:last-child {
+  margin-bottom: 0;
 }
 
-.login-btn{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  background:#2563eb;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.3s;
+.feature-list i {
+  color: #ffd100;
+  /* Yellow accent */
+  margin-right: 15px;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
 }
 
-.login-btn:hover{
-  background:#1d4ed8;
+.left-footer {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  z-index: 1;
 }
 
-#loginError{
-  color:#ff4d4d;
-  display:none;
-  margin-top:10px;
+.left-footer p {
+  margin: 3px 0;
 }
 
-.footer-text{
-  margin-top:30px;
-  font-size:12px;
-  opacity:0.6;
+.left-footer strong {
+  color: white;
+}
+
+/* RIGHT PANEL (White/Form Side) */
+.right-panel {
+  flex: 1;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 380px;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.ptos-icon {
+  font-size: 40px;
+  color: #e53935;
+  /* Red cube color */
+  margin-right: 10px;
+}
+
+.ptos-text {
+  font-size: 32px;
+  font-weight: 800;
+  color: #333;
+  letter-spacing: 1px;
+}
+
+.ptos-text span {
+  color: #e53935;
+}
+
+.welcome-text {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.welcome-text h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.welcome-text p {
+  font-size: 14px;
+  color: #666;
+}
+
+.alert-box {
+  background: #ffebe5;
+  color: #d32f2f;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 20px;
+  border: 1px solid #ffcdd2;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s;
+}
+
+.input-wrapper input:focus {
+  border-color: #256b9c;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 107, 156, 0.2);
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #888;
+  font-size: 14px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 14px;
+  color: #888;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.toggle-password:hover {
+  color: #333;
+}
+
+.captcha-placeholder {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f9f9f9;
+  padding: 15px;
+  margin-bottom: 25px;
+}
+
+.captcha-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.captcha-content label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+
+.cloudflare-logo {
+  height: 20px;
+  object-fit: contain;
+}
+
+.login-btn {
+  width: 100%;
+  background: #256b9c;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s, opacity 0.3s;
+}
+
+.login-btn:hover:not(:disabled) {
+  background: #1e5a84;
+}
+
+.login-btn:disabled {
+  background: #758094;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* RESPONSIVE */
-@media(max-width:900px){
-  .left-panel{
-    display:none;
+@media (max-width: 768px) {
+  .login-card-container {
+    flex-direction: column;
+    height: auto;
   }
-  .right-panel{
-    flex:1;
+
+  .left-panel {
+    padding: 30px;
   }
-}
 
-/* LOGO INSTANSI */
-.instansi-logo{
-  position:absolute;
-  top:30px;
-  left:40px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
+  .feature-list-container {
+    margin: 30px 0;
+  }
 
-.instansi-logo img{
-  width:80px;
-}
-
-.instansi-logo span{
-  font-size:18px;
-  font-weight:600;
-  color:white;
-}
-
-/* SOCIAL LOGIN */
-.social-login{
-  margin-top:30px;
-  text-align:center;
-}
-
-.social-login p{
-  font-size:13px;
-  margin-bottom:15px;
-  opacity:0.7;
-}
-
-.social-icons{
-  display:flex;
-  justify-content:center;
-  gap:15px;
-}
-
-.icon{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-/* Warna masing-masing */
-.fb{ background:#1877f2; }
-.tw{ background:#1da1f2; }
-.google{ background:#ea4335; }
-.linkedin{ background:#0a66c2; }
-
-.icon:hover{
-  transform:translateY(-3px);
+  .right-panel {
+    padding: 40px 20px;
+  }
 }

@@ -5,55 +5,72 @@
     <meta charset="UTF-8">
     <title>Login - Sistem Monitoring Energi</title>
     <link rel="stylesheet" href="login.css">
+    <!-- Include Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="login-page-wrapper">
+        <div class="login-card-container">
 
-        <!-- LEFT SIDE -->
-        <div class="left-panel">
+            <!-- LEFT PANEL -->
+            <div class="left-panel">
+                <div class="left-header">
+                    <img src="logopsc.png" alt="Power Shore Connection" class="logo-danantara">
+                </div>
 
-            <!-- Logo di kiri atas -->
-            <div class="instansi-logo">
-                <img src="logopsc.png" alt="Logo Instansi">
-                <span>Power Shore Connection</span>
+                <div class="feature-list-container">
+                    <ul class="feature-list">
+                        <li><i class="fa-solid fa-anchor"></i> Integrated Port Management</li>
+                        <li><i class="fa-solid fa-chart-line"></i> Real-time Monitoring</li>
+                        <li><i class="fa-solid fa-shield-halved"></i> Secure & Reliable</li>
+                        <li><i class="fa-solid fa-users"></i> Professional Support</li>
+                    </ul>
+                </div>
+
+                <div class="left-footer">
+                    <p><strong>Support Helpdesk:</strong> 0.800.11.99999 (Free Call)</p>
+                    <p>© 2026 Power Shore Connection</p>
+                </div>
             </div>
 
-            <div class="overlay">
-                <h1>Selamat Datang</h1>
-                <p>
-                    Sistem Monitoring Energi Terintegrasi Nasional.
-                    Pantau konsumsi energi secara real-time dan aman.
-                </p>
-            </div>
-
-        </div>
-
-        <!-- RIGHT SIDE -->
-        <div class="right-panel">
-            <div class="login-box">
-                <h2>Log in</h2>
-
-                <form id="loginForm">
-                    <label>Username</label>
-                    <input type="text" id="username" placeholder="Masukkan username" required>
-
-                    <label>Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password" required>
-
-                    <div class="options">
-                        <a href="#">Lupa Password?</a>
+            <!-- RIGHT PANEL -->
+            <div class="right-panel">
+                <div class="form-container">
+                    <div class="welcome-text">
+                        <h2>Welcome Back</h2>
+                        <p>Please sign in to your account</p>
                     </div>
 
-                    <button type="submit" class="login-btn">Login</button>
-                    <p id="loginError">Username atau password salah</p>
-                </form>
+                    <div id="loginError" class="alert-box" style="display: none;">
+                        Security verification failed. Please try again.
+                    </div>
 
-                <p class="footer-text">© Politeknik Pelayaran Surabaya 2026</p>
+                    <form id="loginForm">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                <input type="text" id="username" placeholder="Enter your username" required>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="password" placeholder="Enter your password" required>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword()"></i>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="loginBtn" class="login-btn" disabled>Sign In</button>
+                    </form>
+                </div>
             </div>
-        </div>
 
+        </div>
     </div>
 
     <script src="login.js"></script>
