@@ -214,7 +214,11 @@ function startEnergySimulation() {
     setInterval(() => {
 
         const selectedIMO = document.getElementById("shipIMO")?.innerText || "-";
+
+        // Global variables for dashboard aggregation
         let activeConnections = 0;
+        let globalRealtimeSum = 0;
+        let globalTotalEnergySum = 0;
 
         ships.forEach(ship => {
             const value = Math.floor(Math.random() * 50) + 200;
@@ -233,17 +237,48 @@ function startEnergySimulation() {
                 shipStates[ship.imo].totalEnergy += value;
             }
 
+            // Increment global sums
+            globalRealtimeSum += value;
+            globalTotalEnergySum += shipStates[ship.imo].totalEnergy;
+
             // ADD TO HISTORY BACKGROUND
             addHistory(ship.imo, value, connected);
 
             // ALERT CONDITION FOR EVERY SHIP
             if (value > 240) {
-                // generateAlert checks if it already exists or not. Currently generates a new alert.
                 generateAlert(value, ship.imo);
             }
         });
 
-        // UPDATE UI FOR SELECTED SHIP
+        // UPDATE UI FOR GLOBAL DASHBOARD
+        const kapalTerhubung = document.getElementById("kapalTerhubung");
+        if (kapalTerhubung) kapalTerhubung.innerText = activeConnections + " Kapal";
+
+        const totalKapalEl = document.getElementById("globalTotalKapal");
+        if (totalKapalEl) totalKapalEl.innerText = ships.length;
+
+        const globalKapalEl = document.getElementById("globalKapalTerhubung");
+        if (globalKapalEl) globalKapalEl.innerText = activeConnections;
+
+        const globalRealtimeEl = document.getElementById("globalRealtimeEnergy");
+        if (globalRealtimeEl) globalRealtimeEl.innerText = globalRealtimeSum.toLocaleString() + " kWh";
+
+        const globalCO2El = document.getElementById("globalCO2Saved");
+        const globalCO2 = (globalTotalEnergySum * 0.0027).toFixed(2);
+        if (globalCO2El) globalCO2El.innerText = globalCO2 + " kg";
+
+        // GLOBAL DASHBOARD CHART (Akumulasi Energi Semua Kapal)
+        if (dashboardChart) {
+            dashboardChart.data.labels.push("");
+            dashboardChart.data.datasets[0].data.push(globalTotalEnergySum);
+            if (dashboardChart.data.labels.length > 20) {
+                dashboardChart.data.labels.shift();
+                dashboardChart.data.datasets[0].data.shift();
+            }
+            dashboardChart.update();
+        }
+
+        // UPDATE UI FOR SELECTED SHIP (MONITORING PAGE)
         if (selectedIMO !== "-" && shipStates[selectedIMO]) {
             const current = shipStates[selectedIMO];
             const value = current.realtime;
@@ -254,7 +289,7 @@ function startEnergySimulation() {
             if (realtime) realtime.innerText = value + " kWh";
 
             // AKUMULASI
-            totalEnergy = current.totalEnergy;
+            const totalEnergy = current.totalEnergy; // Use local totalEnergy for selected ship
             const totalEl = document.getElementById("totalEnergy");
             if (totalEl) totalEl.innerText = totalEnergy.toLocaleString() + " kWh";
 
@@ -282,18 +317,7 @@ function startEnergySimulation() {
                 }
             }
 
-            // DASHBOARD CHART
-            if (dashboardChart) {
-                dashboardChart.data.labels.push("");
-                dashboardChart.data.datasets[0].data.push(totalEnergy);
-                if (dashboardChart.data.labels.length > 20) {
-                    dashboardChart.data.labels.shift();
-                    dashboardChart.data.datasets[0].data.shift();
-                }
-                dashboardChart.update();
-            }
-
-            // MONITORING CHART
+            // MONITORING CHART FOR LOCAL SHIP
             if (monitoringChart) {
                 monitoringChart.data.labels.push("");
                 monitoringChart.data.datasets[0].data.push(value);
@@ -306,33 +330,15 @@ function startEnergySimulation() {
 
             // POPUP ALERT CONDITION
             if (value > 240) {
-                // If the selected ship has an alert, show the popup
                 showAlert();
             }
 
-            // UPDATE DASHBOARD ALERT COUNT FOR SPECIFIC SHIP
+            // UPDATE MONITORING ALERT COUNT FOR SPECIFIC SHIP
             const dashAlertCount = document.getElementById("alertCount");
             if (dashAlertCount) {
                 const activeAlertsForShip = alertData.filter(a => a.imo === selectedIMO && a.status === "Active").length;
                 dashAlertCount.innerText = activeAlertsForShip;
             }
-        }
-
-        // UPDATE GLOBAL KAPAL TERHUBUNG & GLOBAL EMISI
-        const kapalTerhubung = document.getElementById("kapalTerhubung");
-        if (kapalTerhubung) kapalTerhubung.innerText = activeConnections + " Kapal";
-        const globalKapalTerhubung = document.getElementById("globalKapalTerhubung");
-        if (globalKapalTerhubung) globalKapalTerhubung.innerText = activeConnections;
-
-        let totalGlobalEnergy = 0;
-        Object.values(shipStates).forEach(state => {
-            totalGlobalEnergy += state.totalEnergy;
-        });
-
-        const globalCO2Saved = document.getElementById("globalCO2Saved");
-        if (globalCO2Saved) {
-            const globalCO2 = (totalGlobalEnergy * 0.0027).toFixed(2);
-            globalCO2Saved.innerText = globalCO2 + " kg";
         }
 
         // Re-render ship list periodically to update status dots
