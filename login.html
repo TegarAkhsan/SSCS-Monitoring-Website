@@ -17,7 +17,10 @@
             <!-- LEFT PANEL -->
             <div class="left-panel">
                 <div class="left-header">
-                    <img src="../assets/img/Logo.jpeg" alt="Power Shore Connection" class="logo-danantara">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="../assets/img/Logo.jpeg" alt="Power Shore Connection" class="logo-danantara">
+                        <span style="font-size: 28px; font-weight: 800; letter-spacing: 1.5px;">SSCS</span>
+                    </div>
                 </div>
 
                 <div class="feature-list-container">
@@ -29,9 +32,10 @@
                     </ul>
                 </div>
 
-                <div class="left-footer">
-                    <p><strong>Support Helpdesk:</strong> 0.800.11.99999 (Free Call)</p>
-                    <p>© 2026 Power Shore Connection</p>
+                <div class="left-footer" style="padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 20px;">
+                    <p style="margin-bottom: 8px; font-size: 13px;"><i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 16px; margin-right: 8px;"></i><strong>Customer Service:</strong> +62 812-3456-7890</p>
+                    <p style="margin-bottom: 8px;"><strong>Support Helpdesk:</strong> 0.800.11.99999 (Free Call)</p>
+                    <p style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">© 2026 Power Shore Connection</p>
                 </div>
             </div>
 
@@ -39,12 +43,21 @@
             <div class="right-panel">
                 <div class="form-container">
                     <div class="welcome-text">
-                        <h2>Welcome Back</h2>
-                        <p>Please sign in to your account</p>
+                        <h2 id="formTitle">Welcome Back</h2>
+                        <p id="formSubtitle">Please sign in to your account</p>
                     </div>
 
                     <div id="loginError" class="alert-box" style="display: none;">
                         Security verification failed. Please try again.
+                    </div>
+
+                    <div id="registerSuccess" class="alert-box" style="display: none; background: #e6ffed; color: #1e7e34; border-color: #c3e6cb;">
+                        Registration successful! You can now sign in.
+                    </div>
+
+                    <div class="tab-container">
+                        <button id="tabLogin" class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+                        <button id="tabRegister" class="tab-btn" onclick="switchTab('register')">Register</button>
                     </div>
 
                     <form id="loginForm">
@@ -61,11 +74,32 @@
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-lock input-icon"></i>
                                 <input type="password" id="password" placeholder="Enter your password" required>
-                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword()"></i>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('password')"></i>
                             </div>
                         </div>
 
                         <button type="submit" id="loginBtn" class="login-btn" disabled>Sign In</button>
+                    </form>
+
+                    <form id="registerForm" style="display: none;">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                <input type="text" id="regUsername" placeholder="Choose a username" required>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="regPassword" placeholder="Create a password" required>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('regPassword')"></i>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="registerBtn" class="login-btn" disabled>Register</button>
                     </form>
                 </div>
             </div>

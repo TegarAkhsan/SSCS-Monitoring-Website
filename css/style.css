@@ -447,3 +447,57 @@ input[type="datetime-local"]:focus {
     color: #7f1d1d;
     font-weight: bold;
 }
+
+/* ================= TOAST NOTIFICATION ================= */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #ffffff;
+    color: #1e293b;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-left: 5px solid #22c55e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 320px;
+    z-index: 10000;
+    transform: translateX(150%);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast-notification.show {
+    transform: translateX(0);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-content i {
+    font-size: 20px;
+    color: #22c55e;
+}
+
+#toastMessage {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 16px;
+    transition: color 0.2s;
+    margin-left: 15px;
+}
+
+.toast-close:hover {
+    color: #475569;
+}

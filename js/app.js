@@ -8,15 +8,11 @@ if (localStorage.getItem("isLogin") !== "true") {
 let dashboardChart;
 let monitoringChart;
 let totalEnergy = 0;
-let historyData = [];
-let planningData = [];
-let alertData = [];
-let shipStates = {};
 
 // ===============================
-// DATA KAPAL ASLI
+// LOKAL DATABASE SYSTEM (localStorage)
 // ===============================
-const ships = [
+const defaultShips = [
     { name: "MT SK LINE 1", type: "Oil Tanker", imo: "9705940" },
     { name: "MT NONI T", type: "Oil Tanker", imo: "9520754" },
     { name: "MT ACCORD", type: "Oil Tanker", imo: "9274020" },
@@ -24,6 +20,22 @@ const ships = [
     { name: "MT SHOKAI", type: "Oil & Chemical", imo: "9940710" },
     { name: "BUNGA KELANA 10", type: "Oil Tanker", imo: "9292981" }
 ];
+
+let ships = JSON.parse(localStorage.getItem("psc_ships")) || defaultShips;
+let historyData = JSON.parse(localStorage.getItem("psc_history")) || [];
+let planningData = JSON.parse(localStorage.getItem("psc_planning")) || [];
+let alertData = JSON.parse(localStorage.getItem("psc_alert")) || [];
+let shipStates = JSON.parse(localStorage.getItem("psc_states")) || {};
+let activeSessions = JSON.parse(localStorage.getItem("psc_sessions")) || {};
+
+function saveDB() {
+    localStorage.setItem("psc_ships", JSON.stringify(ships));
+    localStorage.setItem("psc_history", JSON.stringify(historyData));
+    localStorage.setItem("psc_planning", JSON.stringify(planningData));
+    localStorage.setItem("psc_alert", JSON.stringify(alertData));
+    localStorage.setItem("psc_states", JSON.stringify(shipStates));
+    localStorage.setItem("psc_sessions", JSON.stringify(activeSessions));
+}
 
 // ===============================
 // NAVIGATION & COMPONENT LOADING
@@ -261,7 +273,10 @@ function startEnergySimulation() {
         if (globalKapalEl) globalKapalEl.innerText = activeConnections;
 
         const globalRealtimeEl = document.getElementById("globalRealtimeEnergy");
-        if (globalRealtimeEl) globalRealtimeEl.innerText = globalRealtimeSum.toLocaleString() + " kWh";
+        if (globalRealtimeEl) globalRealtimeEl.innerText = globalRealtimeSum.toLocaleString() + " kW";
+
+        const globalTotalEnergyEl = document.getElementById("globalTotalEnergy");
+        if (globalTotalEnergyEl) globalTotalEnergyEl.innerText = globalTotalEnergySum.toLocaleString() + " kWh";
 
         const globalCO2El = document.getElementById("globalCO2Saved");
         const globalCO2 = (globalTotalEnergySum * 0.0027).toFixed(2);
@@ -285,8 +300,8 @@ function startEnergySimulation() {
             const isConnected = current.connected;
 
             // UPDATE REALTIME CARD
-            const realtime = document.getElementById("realtimeEnergy");
-            if (realtime) realtime.innerText = value + " kWh";
+            const realtime = document.getElementById("realtimePower");
+            if (realtime) realtime.innerText = value + " kW";
 
             // AKUMULASI
             const totalEnergy = current.totalEnergy; // Use local totalEnergy for selected ship
@@ -343,6 +358,9 @@ function startEnergySimulation() {
 
         // Re-render ship list periodically to update status dots
         renderShipList();
+        
+        // Simpan state setiap tick simulasi
+        saveDB();
 
     }, 3000);
 }
@@ -356,13 +374,24 @@ function generateAlert(value, imo) {
 
     if (value > 260) {
         level = "Critical";
-        jenis = "Overload Critical";
+        const criticalTypes = ["Sistem PSC tidak bisa digunakan", "Sistem monitoring error", "Gangguan listrik besar"];
+        jenis = criticalTypes[Math.floor(Math.random() * criticalTypes.length)];
     } else if (value > 240) {
         level = "High";
-        jenis = "High Power Usage";
+        const highTypes = ["Overload", "Over Voltage", "Under Voltage", "Arus berlebih"];
+         jenis = highTypes[Math.floor(Math.random() * highTypes.length)];
     } else if (value > 220) {
         level = "Medium";
-        jenis = "Abnormal Usage";
+        const medTypes = ["High Power Usage", "Fluktuasi tegangan", "Koneksi PSC tidak stabil"];
+        jenis = medTypes[Math.floor(Math.random() * medTypes.length)];
+    } else if (value > 200) {
+        if (Math.random() > 0.8) {
+            level = "Low";
+            const lowTypes = ["Fluktuasi daya kecil", "Tegangan sedikit turun", "Tegangan sedikit naik", "Pemakaian energi mulai meningkat"];
+            jenis = lowTypes[Math.floor(Math.random() * lowTypes.length)];
+        } else {
+            return;
+        }
     } else {
         return; // no alert
     }
@@ -380,7 +409,9 @@ function generateAlert(value, imo) {
         imo: ship.imo,
         jenis: jenis,
         level: level,
-        status: "Active"
+        status: "Active",
+        startTimeMs: Date.now(),
+        waktu: new Date().toLocaleString()
     };
 
     alertData.push(alertItem);
@@ -405,20 +436,31 @@ function renderAlert() {
         const row = document.createElement("tr");
 
         let levelStyle = "font-weight: 600; ";
-        if (item.level === "Critical") levelStyle += "color: #dc2626;";
-        else if (item.level === "High") levelStyle += "color: #ef4444;";
-        else if (item.level === "Medium") levelStyle += "color: #f59e0b;";
+        if (item.level === "Critical") levelStyle += "color: #7f1d1d;";
+        else if (item.level === "High") levelStyle += "color: #dc2626;";
+        else if (item.level === "Medium") levelStyle += "color: #ea580c;";
+        else if (item.level === "Low") levelStyle += "color: #ca8a04;";
+
+        const durationMs = Date.now() - (item.startTimeMs || Date.now());
+        const durHours = Math.floor(durationMs / 3600000);
+        const durText = durHours > 0 ? `${durHours} Jam` : `< 1 Jam`;
+
+        let levelIcon = "";
+        if (item.level === "Low") levelIcon = "🟡";
+        if (item.level === "Medium") levelIcon = "🟠";
+        if (item.level === "High") levelIcon = "🔴";
+        if (item.level === "Critical") levelIcon = "🚨"; // Customize mark
 
         row.innerHTML = `
             <td>${item.id}</td>
             <td><span style="font-weight: 600; color: #1e293b;">${item.ship}</span></td>
             <td>${item.imo}</td>
             <td>${item.jenis}</td>
-            <td style="${levelStyle}">${item.level}</td>
-            <td>${item.status}</td>
-            <td>-</td>
+            <td style="${levelStyle}">${levelIcon} ${item.level}</td>
+            <td>${item.waktu || "-"}</td>
+            <td>${item.status === "Active" ? durText : "-"}</td>
             <td>
-                <button style="background: #f1f5f9; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Detail</button>
+                <button onclick="openAlertDetail('${item.id}')" style="background: #f1f5f9; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Detail</button>
             </td>
         `;
 
@@ -428,6 +470,26 @@ function renderAlert() {
     document.getElementById("totalAlert").innerText = alertData.length;
     document.getElementById("criticalAlert").innerText = criticalCount;
     document.getElementById("activeAlert").innerText = activeCount;
+}
+
+function openAlertDetail(id) {
+    const alertObj = alertData.find(a => a.id === id);
+    if (!alertObj) return;
+    
+    document.getElementById("alertDetailContent").innerHTML = `
+        <p><strong>ID Alert:</strong> ${alertObj.id}</p>
+        <p><strong>Waktu Kejadian:</strong> ${alertObj.waktu || "-"}</p>
+        <p><strong>Kapal:</strong> ${alertObj.ship} (IMO: ${alertObj.imo})</p>
+        <p><strong>Level:</strong> <span style="font-weight: bold;">${alertObj.level}</span></p>
+        <p><strong>Jenis Gangguan:</strong> ${alertObj.jenis}</p>
+        <br>
+        <p style="background: #f8fafc; padding: 10px; border-radius: 6px;">Detail teknis untuk gangguan <strong>${alertObj.jenis}</strong> pada sistem ${alertObj.ship}. Harap melakukan pengecekan pada panel PSC secepatnya.</p>
+    `;
+    document.getElementById("alertDetailModal").style.display = "block";
+}
+
+function closeAlertDetail() {
+    document.getElementById("alertDetailModal").style.display = "none";
 }
 // ===============================
 // ALERT MODAL
@@ -457,29 +519,40 @@ function addHistory(imo, value, connected) {
     const ship = ships.find(s => s.imo === imo);
     if (!ship) return;
 
-    const historyItem = {
-        id: "PSC-" + Date.now() + Math.floor(Math.random() * 100),
-        time: new Date().toLocaleString(),
-        dateOnly: new Date().toISOString().split("T")[0],
-        ship: ship.name,
-        imo: ship.imo,
-        energy: value,
-        co2: (value * 0.0027).toFixed(2),
-        status: connected ? "Connected" : "Disconnected",
-        operasi: connected ? "On The Move" : "Done"
-    };
-
-    historyData.push(historyItem);
-
-    // Prevent the array from growing infinitely and crashing memory
-    if (historyData.length > 300) {
-        historyData.shift();
+    if (connected) {
+        if (!activeSessions[imo]) {
+            activeSessions[imo] = {
+                id: "PSC-" + Date.now() + Math.floor(Math.random() * 100),
+                startTime: new Date().toLocaleString(),
+                dateOnly: new Date().toISOString().split("T")[0],
+                ship: ship.name,
+                imo: ship.imo,
+                energy: 0,
+                co2: 0,
+                status: "Connected",
+                operasi: "On The Move"
+            };
+        }
+        activeSessions[imo].energy += value;
+        activeSessions[imo].co2 = (activeSessions[imo].energy * 0.0027).toFixed(2);
+    } else {
+        if (activeSessions[imo]) {
+            let session = activeSessions[imo];
+            session.endTime = new Date().toLocaleString();
+            session.status = "Disconnected";
+            session.operasi = "Done";
+            historyData.push(session);
+            if (historyData.length > 300) historyData.shift();
+            delete activeSessions[imo];
+        }
     }
-
+    
+    // The simulation loop renders history dynamically in the background, 
+    // but typically we should only re-render if we are on the page. We will let the tick handle it.
     renderHistory();
 }
-function renderHistory() {
 
+function renderHistory() {
     const tbody = document.getElementById("historyList");
     if (!tbody) return;
 
@@ -491,7 +564,11 @@ function renderHistory() {
     let totalEnergi = 0;
     let totalCO2 = 0;
 
-    const filteredData = historyData.filter(item => {
+    // Combine finished history and currently active sessions
+    const activeDataArr = Object.values(activeSessions).map(s => ({...s, endTime: "Sedang Berjalan"}));
+    const allHistoryData = [...historyData, ...activeDataArr];
+
+    const filteredData = allHistoryData.filter(item => {
         const matchDate = !filterDate || item.dateOnly === filterDate;
         const matchShip = !filterShipIMO || item.imo === filterShipIMO;
         return matchDate && matchShip;
@@ -502,8 +579,8 @@ function renderHistory() {
         totalCO2 += Number(item.co2);
     });
 
+    // Display max 30 recent items
     filteredData.slice(-30).reverse().forEach((item, index) => {
-
         const row = document.createElement("tr");
 
         const badgeClass =
@@ -515,7 +592,8 @@ function renderHistory() {
             <td>${index + 1}</td>
             <td>${item.ship}</td>
             <td>${item.imo}</td>
-            <td>${item.time}</td>
+            <td>${item.startTime || item.time}</td>
+            <td>${item.endTime || "-"}</td>
             <td>${item.energy}</td>
             <td>${item.co2}</td>
             <td><span class="${badgeClass}">${item.status}</span></td>
@@ -526,7 +604,7 @@ function renderHistory() {
 
     // Update Summary
     document.getElementById("totalTransaksi").innerText = filteredData.length;
-    document.getElementById("totalEnergiHistory").innerText = totalEnergi + " kWh";
+    document.getElementById("totalEnergiHistory").innerText = totalEnergi.toLocaleString() + " kWh";
     document.getElementById("totalCO2History").innerText = totalCO2.toFixed(2) + " kg";
 }
 // ===============================
@@ -538,7 +616,8 @@ function addPlanning() {
     const date = document.getElementById("planDate").value;
 
     if (!name || !dermaga || !date) {
-        alert("Lengkapi data planning!");
+        if(typeof showToast === "function") showToast("Lengkapi data planning!", "error");
+        else alert("Lengkapi data planning!");
         return;
     }
 
@@ -547,10 +626,19 @@ function addPlanning() {
 
     planningData.push({ name, dermaga, date: formattedDate });
 
-    const list = document.getElementById("planningList");
-    list.innerHTML = "";
+    document.getElementById("planShipName").value = "";
+    document.getElementById("planDermaga").value = "";
+    document.getElementById("planDate").value = "";
+    
+    saveDB();
+    renderPlanningList();
+}
 
-    planningData.forEach(p => {
+function renderPlanningList() {
+    const list = document.getElementById("planningList");
+    if(!list) return;
+    list.innerHTML = "";
+    planningData.forEach((p, index) => {
         const li = document.createElement("li");
         li.className = "planning-card";
         li.innerHTML = `
@@ -558,14 +646,83 @@ function addPlanning() {
                 <h4 style="color: #1e293b; margin-bottom: 5px; font-size: 16px;">${p.name}</h4>
                 <p style="color: #64748b; font-size: 13px;"><i class="fa-solid fa-location-dot" style="margin-right: 5px;"></i> ${p.dermaga} &nbsp;|&nbsp; <i class="fa-regular fa-clock" style="margin-left: 5px; margin-right: 5px;"></i> ${p.date}</p>
             </div>
-            <span class="planning-status">Scheduled</span>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span class="planning-status">Scheduled</span>
+                <button onclick="runPlanning(${index})" style="background: #22c55e; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;"><i class="fa-solid fa-play"></i> Run</button>
+            </div>
         `;
         list.appendChild(li);
     });
+}
 
-    document.getElementById("planShipName").value = "";
-    document.getElementById("planDermaga").value = "";
-    document.getElementById("planDate").value = "";
+function runPlanning(index) {
+    const p = planningData[index];
+    if (!p) return;
+    
+    // Create new IMO dynamically
+    const newImo = "7" + Math.floor(Math.random() * 1000000);
+    const newShip = { name: p.name, type: "General Cargo", imo: newImo };
+    
+    // Add to ships top
+    ships.unshift(newShip);
+    
+    // Initialize state
+    shipStates[newImo] = { totalEnergy: 0, realtime: 0, connected: false };
+    
+    // Remove from planning queue
+    planningData.splice(index, 1);
+    
+    saveDB();
+    
+    // Re-render
+    renderPlanningList();
+    renderShipList();
+    renderReportShipList();
+    renderHistoryShipFilter();
+    
+    if(typeof showToast === "function") {
+        showToast("Kapal " + p.name + " berhasil dipindahkan ke antrean Monitoring.", "success");
+    } else {
+        alert("Kapal " + p.name + " berhasil dipindahkan ke antrean Monitoring.");
+    }
+}
+
+// ===============================
+// TOAST NOTIFICATION
+// ===============================
+let toastTimeout;
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toastNotification");
+    const msgEl = document.getElementById("toastMessage");
+    const iconEl = document.getElementById("toastIcon");
+
+    if (!toast || !msgEl || !iconEl) return;
+
+    msgEl.innerText = message;
+
+    if (type === "success") {
+        toast.style.borderLeftColor = "#22c55e";
+        iconEl.className = "fa-solid fa-circle-check";
+        iconEl.style.color = "#22c55e";
+    } else if (type === "error") {
+        toast.style.borderLeftColor = "#ef4444";
+        iconEl.className = "fa-solid fa-circle-exclamation";
+        iconEl.style.color = "#ef4444";
+    }
+
+    toast.classList.add("show");
+
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        closeToast();
+    }, 4000);
+}
+
+function closeToast() {
+    const toast = document.getElementById("toastNotification");
+    if (toast) {
+        toast.classList.remove("show");
+    }
 }
 
 // ===============================

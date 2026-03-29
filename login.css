@@ -72,8 +72,10 @@ body {
 }
 
 .logo-danantara {
-  height: 30px;
+  height: 60px; /* Made larger */
   object-fit: contain;
+  mix-blend-mode: multiply; /* Transparent background effect against blue */
+  filter: contrast(1.2);
 }
 
 .logo-pelindo {
@@ -337,4 +339,34 @@ body {
   .right-panel {
     padding: 40px 20px;
   }
+}
+
+/* TABS */
+.tab-container {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px; /* overlap structural border */
+  transition: all 0.3s;
+}
+
+.tab-btn:hover {
+  color: #256b9c;
+}
+
+.tab-btn.active {
+  color: #256b9c;
+  border-bottom: 2px solid #256b9c;
 }
