@@ -96,6 +96,8 @@ function renderShipList() {
 
     container.innerHTML = "";
     ships.forEach(ship => {
+        if (shipStates[ship.imo] && shipStates[ship.imo].stopped) return;
+
         const isActive = ship.imo === selectedShipImo;
         const card = document.createElement("div");
 
@@ -138,22 +140,54 @@ function selectShip(imo) {
         document.getElementById("shipType").innerText = ship.type;
         document.getElementById("shipIMO").innerText = ship.imo;
 
-        // Load total energy for the selected ship
         if (!shipStates[imo]) {
-            shipStates[imo] = { totalEnergy: 0, realtime: 0, connected: false };
+            shipStates[imo] = { totalEnergy: 0, realtime: 0, connected: false, stopped: false };
         }
-        totalEnergy = shipStates[imo].totalEnergy;
-        document.getElementById("totalEnergy").innerText = totalEnergy.toLocaleString() + " kWh";
-        document.getElementById("co2Saved").innerText = (totalEnergy * 0.0027).toFixed(2) + " kg";
+        
+        const current = shipStates[imo];
+        
+        const realtimeEl = document.getElementById("realtimePower");
+        if (realtimeEl) realtimeEl.innerText = current.realtime + " kW";
 
-        // Optional: Ensure chart smoothly transitions instead of jumping
-        // Since active connection handles pushing new data each tick, switching ship
-        // implicitly continues chart data (it won't clear history)
+        totalEnergy = current.totalEnergy;
+        const totalEl = document.getElementById("totalEnergy");
+        if (totalEl) totalEl.innerText = totalEnergy.toLocaleString() + " kWh";
+        
+        const co2El = document.getElementById("co2Saved");
+        if (co2El) co2El.innerText = (totalEnergy * 0.0027).toFixed(2) + " kg";
+
+        const dashAlertCount = document.getElementById("alertCount");
+        if (dashAlertCount) {
+            const activeAlertsForShip = alertData.filter(a => a.imo === imo && a.status === "Active").length;
+            dashAlertCount.innerText = activeAlertsForShip;
+        }
+
+        const pscStatusIndicator = document.getElementById("pscStatusIndicator");
+        const disconnectBtn = document.getElementById("disconnectPscBtn");
+        
+        if (pscStatusIndicator) {
+            if (current.connected) {
+                pscStatusIndicator.className = "success";
+                pscStatusIndicator.innerText = "Aman";
+                pscStatusIndicator.style.background = "#def7ec";
+                pscStatusIndicator.style.color = "#03543f";
+                if (disconnectBtn) disconnectBtn.style.display = "flex";
+            } else {
+                pscStatusIndicator.className = "danger";
+                pscStatusIndicator.innerText = "Bahaya";
+                pscStatusIndicator.style.background = "#fde8e8";
+                pscStatusIndicator.style.color = "#9b1c1c";
+                if (disconnectBtn) disconnectBtn.style.display = "none";
+            }
+        }
+
+        const pscStatus = document.getElementById("pscStatus");
+        if (pscStatus) {
+            pscStatus.innerText = current.connected ? "Connected" : "Disconnected";
+        }
 
         selectedShipImo = imo; // Save selected ship ID
         renderShipList(); // Re-render to show active stylistic state
-
-        // Removed showPage('dashboard') since we are already on that layout
     }
 }
 
@@ -214,7 +248,10 @@ window.onload = async function () {
     // Initialize Ship List
     renderShipList();
     renderReportShipList();
-    setTimeout(renderHistoryShipFilter, 500); // delay to ensure history component loaded
+    setTimeout(() => {
+        renderHistoryShipFilter();
+        renderAlert();
+    }, 500); // delay to ensure history component loaded
 
     startEnergySimulation();
 };
@@ -231,34 +268,41 @@ function startEnergySimulation() {
         let activeConnections = 0;
         let globalRealtimeSum = 0;
         let globalTotalEnergySum = 0;
+        let monitoredKapalCount = 0;
 
         ships.forEach(ship => {
-            const value = Math.floor(Math.random() * 50) + 200;
-            const connected = value > 210;
-
-            if (connected) activeConnections++;
-
             if (!shipStates[ship.imo]) {
-                shipStates[ship.imo] = { totalEnergy: 0, realtime: 0, connected: false };
+                shipStates[ship.imo] = { totalEnergy: 0, realtime: 0, connected: false, stopped: false };
             }
 
-            shipStates[ship.imo].realtime = value;
-            shipStates[ship.imo].connected = connected;
+            if (shipStates[ship.imo].stopped) {
+                shipStates[ship.imo].realtime = 0;
+                shipStates[ship.imo].connected = false;
+                
+                globalTotalEnergySum += shipStates[ship.imo].totalEnergy;
+            } else {
+                monitoredKapalCount++;
+                const value = Math.floor(Math.random() * 50) + 200;
+                const connected = value > 210;
 
-            if (connected) {
-                shipStates[ship.imo].totalEnergy += value;
-            }
+                if (connected) activeConnections++;
 
-            // Increment global sums
-            globalRealtimeSum += value;
-            globalTotalEnergySum += shipStates[ship.imo].totalEnergy;
+                shipStates[ship.imo].realtime = value;
+                shipStates[ship.imo].connected = connected;
 
-            // ADD TO HISTORY BACKGROUND
-            addHistory(ship.imo, value, connected);
+                if (connected) {
+                    shipStates[ship.imo].totalEnergy += value;
+                }
 
-            // ALERT CONDITION FOR EVERY SHIP
-            if (value > 240) {
-                generateAlert(value, ship.imo);
+                globalRealtimeSum += value;
+                globalTotalEnergySum += shipStates[ship.imo].totalEnergy;
+
+                // Pass true for connection status so the continuous monitoring session isn't broken
+                addHistory(ship.imo, value, true);
+
+                if (value > 240) {
+                    generateAlert(value, ship.imo);
+                }
             }
         });
 
@@ -267,7 +311,7 @@ function startEnergySimulation() {
         if (kapalTerhubung) kapalTerhubung.innerText = activeConnections + " Kapal";
 
         const totalKapalEl = document.getElementById("globalTotalKapal");
-        if (totalKapalEl) totalKapalEl.innerText = ships.length;
+        if (totalKapalEl) totalKapalEl.innerText = monitoredKapalCount;
 
         const globalKapalEl = document.getElementById("globalKapalTerhubung");
         if (globalKapalEl) globalKapalEl.innerText = activeConnections;
@@ -316,24 +360,27 @@ function startEnergySimulation() {
             // STATUS PSC DYNAMIC
             const pscStatus = document.getElementById("pscStatus");
             const pscStatusIndicator = document.getElementById("pscStatusIndicator");
-            if (pscStatus && pscStatusIndicator) {
+            const disconnectBtn = document.getElementById("disconnectPscBtn");
+            if (pscStatusIndicator) {
                 if (isConnected) {
-                    pscStatus.innerText = "Connected";
+                    if (pscStatus) pscStatus.innerText = "Connected";
                     pscStatusIndicator.className = "success";
                     pscStatusIndicator.innerText = "Aman";
                     pscStatusIndicator.style.background = "#def7ec";
                     pscStatusIndicator.style.color = "#03543f";
+                    if (disconnectBtn) disconnectBtn.style.display = "flex";
                 } else {
-                    pscStatus.innerText = "Disconnected";
+                    if (pscStatus) pscStatus.innerText = "Disconnected";
                     pscStatusIndicator.className = "danger";
                     pscStatusIndicator.innerText = "Bahaya";
                     pscStatusIndicator.style.background = "#fde8e8";
                     pscStatusIndicator.style.color = "#9b1c1c";
+                    if (disconnectBtn) disconnectBtn.style.display = "none";
                 }
             }
 
             // MONITORING CHART FOR LOCAL SHIP
-            if (monitoringChart) {
+            if (monitoringChart && !current.stopped) {
                 monitoringChart.data.labels.push("");
                 monitoringChart.data.datasets[0].data.push(value);
                 if (monitoringChart.data.labels.length > 20) {
@@ -341,11 +388,6 @@ function startEnergySimulation() {
                     monitoringChart.data.datasets[0].data.shift();
                 }
                 monitoringChart.update();
-            }
-
-            // POPUP ALERT CONDITION
-            if (value > 240) {
-                showAlert();
             }
 
             // UPDATE MONITORING ALERT COUNT FOR SPECIFIC SHIP
@@ -416,76 +458,356 @@ function generateAlert(value, imo) {
 
     alertData.push(alertItem);
     renderAlert();
+    if(typeof renderShipList === "function") renderShipList();
+    if(typeof showAlert === "function") showAlert(alertItem);
 }
 
 function renderAlert() {
-
     const tbody = document.getElementById("alertList");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
+    const historyTbody = document.getElementById("alertHistoryList");
+    
+    if (tbody) tbody.innerHTML = "";
+    if (historyTbody) historyTbody.innerHTML = "";
 
     let criticalCount = 0;
     let activeCount = 0;
 
-    alertData.slice(-20).reverse().forEach(item => {
-
-        if (item.level === "Critical") criticalCount++;
-        if (item.status === "Active") activeCount++;
-
-        const row = document.createElement("tr");
-
-        let levelStyle = "font-weight: 600; ";
-        if (item.level === "Critical") levelStyle += "color: #7f1d1d;";
-        else if (item.level === "High") levelStyle += "color: #dc2626;";
-        else if (item.level === "Medium") levelStyle += "color: #ea580c;";
-        else if (item.level === "Low") levelStyle += "color: #ca8a04;";
-
-        const durationMs = Date.now() - (item.startTimeMs || Date.now());
-        const durHours = Math.floor(durationMs / 3600000);
-        const durText = durHours > 0 ? `${durHours} Jam` : `< 1 Jam`;
-
-        let levelIcon = "";
-        if (item.level === "Low") levelIcon = "🟡";
-        if (item.level === "Medium") levelIcon = "🟠";
-        if (item.level === "High") levelIcon = "🔴";
-        if (item.level === "Critical") levelIcon = "🚨"; // Customize mark
-
-        row.innerHTML = `
-            <td>${item.id}</td>
-            <td><span style="font-weight: 600; color: #1e293b;">${item.ship}</span></td>
-            <td>${item.imo}</td>
-            <td>${item.jenis}</td>
-            <td style="${levelStyle}">${levelIcon} ${item.level}</td>
-            <td>${item.waktu || "-"}</td>
-            <td>${item.status === "Active" ? durText : "-"}</td>
-            <td>
-                <button onclick="openAlertDetail('${item.id}')" style="background: #f1f5f9; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Detail</button>
-            </td>
-        `;
-
-        tbody.appendChild(row);
+    alertData.forEach(item => {
+        if (item.status === "Active") {
+            activeCount++;
+            if (item.level === "Critical") criticalCount++;
+        }
     });
 
-    document.getElementById("totalAlert").innerText = alertData.length;
-    document.getElementById("criticalAlert").innerText = criticalCount;
-    document.getElementById("activeAlert").innerText = activeCount;
+    const activeAlerts = alertData.filter(a => a.status === "Active").reverse();
+    const resolvedAlerts = alertData.filter(a => a.status === "Resolved").slice(-20).reverse();
+
+    if (tbody) {
+        activeAlerts.forEach(item => {
+            const row = document.createElement("tr");
+
+            let levelStyle = "font-weight: 600; ";
+            if (item.level === "Critical") levelStyle += "color: #7f1d1d;";
+            else if (item.level === "High") levelStyle += "color: #dc2626;";
+            else if (item.level === "Medium") levelStyle += "color: #ea580c;";
+            else if (item.level === "Low") levelStyle += "color: #ca8a04;";
+
+            const durationMs = Date.now() - (item.startTimeMs || Date.now());
+            const durHours = Math.floor(durationMs / 3600000);
+            const durMins = Math.floor((durationMs % 3600000) / 60000);
+            const durText = durHours > 0 ? `${durHours} Jam ${durMins} Menit` : `${durMins} Menit`;
+
+            let levelIcon = "";
+            if (item.level === "Low") levelIcon = "🟡";
+            if (item.level === "Medium") levelIcon = "🟠";
+            if (item.level === "High") levelIcon = "🔴";
+            if (item.level === "Critical") levelIcon = "🚨";
+
+            row.innerHTML = `
+                <td>${item.id}</td>
+                <td><span style="font-weight: 600; color: #1e293b;">${item.ship}</span></td>
+                <td>${item.imo}</td>
+                <td>${item.jenis}</td>
+                <td style="${levelStyle}">${levelIcon} ${item.level}</td>
+                <td>${item.waktu || "-"}</td>
+                <td>${durText}</td>
+                <td>
+                    <button onclick="openAlertDetail('${item.id}')" style="background: #f1f5f9; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #475569; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Detail</button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+    }
+
+    if (historyTbody) {
+        resolvedAlerts.forEach(item => {
+            const row = document.createElement("tr");
+
+            let levelStyle = "font-weight: 600; ";
+            if (item.level === "Critical") levelStyle += "color: #7f1d1d;";
+            else if (item.level === "High") levelStyle += "color: #dc2626;";
+            else if (item.level === "Medium") levelStyle += "color: #ea580c;";
+            else if (item.level === "Low") levelStyle += "color: #ca8a04;";
+
+            let levelIcon = "";
+            if (item.level === "Low") levelIcon = "🟡";
+            if (item.level === "Medium") levelIcon = "🟠";
+            if (item.level === "High") levelIcon = "🔴";
+            if (item.level === "Critical") levelIcon = "🚨";
+
+            row.innerHTML = `
+                <td>${item.id}</td>
+                <td><span style="font-weight: 600; color: #1e293b;">${item.ship}</span></td>
+                <td style="${levelStyle}">${levelIcon} ${item.level}</td>
+                <td>${item.resolvedAt || "-"}</td>
+            `;
+
+            historyTbody.appendChild(row);
+        });
+    }
+
+    const totalAlertEl = document.getElementById("totalAlert");
+    if (totalAlertEl) totalAlertEl.innerText = alertData.length;
+    
+    const criticalAlertEl = document.getElementById("criticalAlert");
+    if (criticalAlertEl) criticalAlertEl.innerText = criticalCount;
+    
+    const activeAlertEl = document.getElementById("activeAlert");
+    if (activeAlertEl) activeAlertEl.innerText = activeCount;
+}
+
+function resolveAlert(id) {
+    const alertObj = alertData.find(a => a.id === id);
+    if (!alertObj) return;
+    
+    alertObj.status = "Resolved";
+    alertObj.resolvedAt = new Date().toLocaleString();
+    
+    saveDB();
+    renderAlert();
+    
+    if(typeof showToast === "function") {
+        showToast("Alert " + id + " berhasil di-resolve.", "success");
+    } else {
+        alert("Alert " + id + " berhasil di-resolve.");
+    }
+}
+
+function stopPsc(imo, alertId) {
+    if (!shipStates[imo]) {
+        shipStates[imo] = { totalEnergy: 0, realtime: 0, connected: false, stopped: false };
+    }
+    shipStates[imo].stopped = true;
+    shipStates[imo].realtime = 0;
+    shipStates[imo].connected = false;
+    
+    if (alertId) {
+        const alertObj = alertData.find(a => a.id === alertId);
+        if (alertObj && alertObj.status === "Active") {
+            alertObj.status = "Resolved";
+            alertObj.resolvedAt = new Date().toLocaleString();
+            alertObj.deskripsi = "Dimatikan paksa (Stop PSC) via sistem.";
+        }
+    }
+
+    addHistory(imo, 0, false);
+    saveDB();
+    renderAlert();
+    renderShipList();
+    
+    if(typeof showToast === "function") {
+        showToast("Koneksi PSC Kapal Berhasil Dihentikan.", "success");
+    } else {
+        alert("Koneksi PSC Kapal Berhasil Dihentikan.");
+    }
+}
+
+function disconnectCurrentShip() {
+    if (selectedShipImo && selectedShipImo !== "-") {
+        stopPsc(selectedShipImo);
+        
+        const availableShips = ships.filter(s => !(shipStates[s.imo] && shipStates[s.imo].stopped));
+        
+        if (availableShips.length > 0) {
+            selectShip(availableShips[0].imo);
+        } else {
+            document.getElementById("shipName").innerText = "Tidak ada kapal terpilih";
+            document.getElementById("shipIMO").innerText = "-";
+            document.getElementById("shipType").innerText = "-";
+            
+            const realtimeEl = document.getElementById("realtimePower");
+            if (realtimeEl) realtimeEl.innerText = "0 kW";
+            const totalEl = document.getElementById("totalEnergy");
+            if (totalEl) totalEl.innerText = "0 kWh";
+            const co2El = document.getElementById("co2Saved");
+            if (co2El) co2El.innerText = "0 kg";
+            const alertCount = document.getElementById("alertCount");
+            if (alertCount) alertCount.innerText = "0";
+            
+            const pscStatusIndicator = document.getElementById("pscStatusIndicator");
+            if (pscStatusIndicator) {
+                pscStatusIndicator.className = "danger";
+                pscStatusIndicator.innerText = "Kosong";
+                pscStatusIndicator.style.background = "#f1f5f9";
+                pscStatusIndicator.style.color = "#64748b";
+            }
+            const btn = document.getElementById("disconnectPscBtn");
+            if (btn) btn.style.display = "none";
+            
+            selectedShipImo = null;
+            renderShipList();
+        }
+    }
 }
 
 function openAlertDetail(id) {
     const alertObj = alertData.find(a => a.id === id);
     if (!alertObj) return;
+
+    let bgHeader = "";
+    let colorText = "";
+    let badgeBg = "";
+    let badgeText = "";
+    let warningIcon = "";
+
+    if (alertObj.level === "Critical") {
+        bgHeader = "linear-gradient(135deg, #df2029, #b9151b)";
+        badgeBg = "#fef08a"; badgeText = "#df2029";
+        colorText = "#df2029";
+        warningIcon = "fa-triangle-exclamation";
+    } else if (alertObj.level === "High") {
+        bgHeader = "linear-gradient(135deg, #ef4444, #dc2626)";
+        badgeBg = "#fef08a"; badgeText = "#dc2626";
+        colorText = "#dc2626";
+        warningIcon = "fa-triangle-exclamation";
+    } else if (alertObj.level === "Medium") {
+        bgHeader = "linear-gradient(135deg, #f97316, #ea580c)";
+        badgeBg = "#ffedd5"; badgeText = "#ea580c";
+        colorText = "#ea580c";
+        warningIcon = "fa-circle-exclamation";
+    } else {
+        bgHeader = "linear-gradient(135deg, #eab308, #ca8a04)";
+        badgeBg = "#fef9c3"; badgeText = "#ca8a04";
+        colorText = "#ca8a04";
+        warningIcon = "fa-bell";
+    }
+
+    const durationMs = Date.now() - (alertObj.startTimeMs || Date.now());
+    const durMins = Math.max(1, Math.floor(durationMs / 60000));
+    const durText = alertObj.status === "Active" ? (durMins + " Menit") : "Resolved";
+
+    let energiTerpakai = "0";
+    let dayaSaatIni = "0";
+    let co2Reduksi = "0";
+    
+    if (shipStates[alertObj.imo]) {
+        energiTerpakai = shipStates[alertObj.imo].totalEnergy.toLocaleString();
+        dayaSaatIni = shipStates[alertObj.imo].realtime;
+        co2Reduksi = (shipStates[alertObj.imo].totalEnergy * 0.05).toFixed(2);
+    } else {
+        energiTerpakai = (Math.random() * 15 + 5).toFixed(1);
+        dayaSaatIni = (Math.random() * 60 + 260).toFixed(0);
+        co2Reduksi = (parseFloat(energiTerpakai) * 0.05).toFixed(2);
+    }
+    const dayaRata = Math.max(200, dayaSaatIni - 25);
+    
+    const sttPscText = alertObj.status === "Active" ? "Aktif" : "Nonaktif";
+    const sttPscColor = alertObj.status === "Active" ? "#16a34a" : "#64748b";
+    const isResolved = alertObj.status === "Resolved";
     
     document.getElementById("alertDetailContent").innerHTML = `
-        <p><strong>ID Alert:</strong> ${alertObj.id}</p>
-        <p><strong>Waktu Kejadian:</strong> ${alertObj.waktu || "-"}</p>
-        <p><strong>Kapal:</strong> ${alertObj.ship} (IMO: ${alertObj.imo})</p>
-        <p><strong>Level:</strong> <span style="font-weight: bold;">${alertObj.level}</span></p>
-        <p><strong>Jenis Gangguan:</strong> ${alertObj.jenis}</p>
-        <br>
-        <p style="background: #f8fafc; padding: 10px; border-radius: 6px;">Detail teknis untuk gangguan <strong>${alertObj.jenis}</strong> pada sistem ${alertObj.ship}. Harap melakukan pengecekan pada panel PSC secepatnya.</p>
+        <div style="background: ${bgHeader}; padding: 20px 25px; color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="font-size: 18px; font-weight: 600; margin: 0; display: flex; align-items: center; font-family: 'Inter', sans-serif;">
+                    Detail Alert <span style="font-size: 13px; font-weight: normal; margin-left: 10px; opacity: 0.9;">${alertObj.id}</span>
+                </h2>
+                <button onclick="closeAlertDetail()" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.8; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 18px; font-weight: bold; display: flex; align-items: center; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fa-solid ${warningIcon}" style="margin-right: 10px; font-size: 22px;"></i> ${alertObj.jenis}
+                </div>
+                <div style="background: ${badgeBg}; color: ${badgeText}; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 13px; text-transform: uppercase; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i> ${alertObj.level}
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 25px; background: #ffffff;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; color: #475569; font-size: 14px; grid-column: span 2;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 32px; height: 32px; background: #f1f5f9; color: #64748b; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: 12px;"><i class="fa-solid fa-ship"></i></div>
+                        <div>Nama Kapal <span style="font-weight: 600; color: #1e293b; margin-left: 8px; font-size: 15px;">${alertObj.ship}</span></div>
+                    </div>
+                    <div style="font-weight: 500; color: #475569;">${alertObj.imo}</div>
+                </div>
+                
+                <div style="display: flex; align-items: center; color: #475569; font-size: 14px; grid-column: span 2;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 32px; height: 32px; background: #fef2f2; color: #ef4444; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: 12px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>Jenis Gangguan <span style="font-weight: 600; color: #1e293b; margin-left: 8px; font-size: 15px;">${alertObj.jenis}</span></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; color: #475569; font-size: 14px; justify-content: space-between; grid-column: span 2;">
+                    <div style="display: flex; align-items: center; flex: 1;">
+                        <div style="width: 32px; height: 32px; background: #fff7ed; color: #f97316; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: 12px;"><i class="fa-regular fa-calendar-days"></i></div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-size: 12px; color: #64748b;">Waktu Terjadi</span>
+                            <span style="font-weight: 600; color: #1e293b; font-size: 14px;">${alertObj.waktu} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 11px; margin-left: 4px; color: #94a3b8;"></i></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
+                        <i class="fa-regular fa-clock" style="margin-right: 8px;"></i> Durasi <span style="font-weight: 600; color: #1e293b; margin-left: 8px; font-size: 15px;">${durText}</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; color: #475569; font-size: 14px; justify-content: space-between; grid-column: span 2;">
+                    <div style="display: flex; align-items: center; flex: 1;">
+                        <div style="width: 32px; height: 32px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: 12px;"><i class="fa-solid fa-bolt"></i></div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-size: 12px; color: #64748b;">Energi Terpakai</span>
+                            <span style="font-weight: 600; color: #1e293b; font-size: 15px;">${energiTerpakai} kWh</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
+                        <i class="fa-solid fa-arrow-trend-up" style="margin-right: 8px;"></i> Daya Rata-rata <span style="font-weight: 600; color: #1e293b; margin-left: 8px; font-size: 15px;">${dayaRata} kW</span>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="font-size: 16px; color: #1e293b; margin-bottom: 12px; font-weight: 700;">Detail Gangguan</h4>
+            <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 25px;">
+                <div style="color: ${colorText}; font-weight: bold; font-size: 14px; margin-bottom: 15px; display: flex; align-items: center; text-transform: uppercase;">
+                    <i class="fa-solid ${warningIcon}" style="margin-right: 8px;"></i> ${alertObj.jenis.toUpperCase()} - HIGH POWER USAGE
+                </div>
+                <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px; display: flex; font-size: 14px;">
+                    <span style="color: #64748b; width: 120px;">Penyebab</span>
+                    <span style="color: #1e293b; font-weight: 500;">Daya kapal melebihi batas sistem</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+                        <span style="color: #64748b;">Batas Maks</span>
+                        <span style="color: #1e293b; font-weight: 600;">250 kW</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+                        <span style="color: #64748b;">Reduksi Emisi CO2</span>
+                        <span style="color: #1e293b; font-weight: 600;">${co2Reduksi} kg</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Daya Saat Ini</span>
+                        <span style="color: #1e293b; font-weight: 600;">${dayaSaatIni} kW</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b; display: flex; align-items: center;"><i class="fa-solid fa-bolt" style="color: #10b981; margin-right: 6px;"></i> Status PSC</span>
+                        <span style="color: ${sttPscColor}; font-weight: 600;"><i class="fa-solid ${alertObj.status === 'Active' ? 'fa-circle-check' : 'fa-circle-xmark'}" style="margin-right: 4px;"></i> ${sttPscText}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: space-between;">
+                <button style="flex: 1; padding: 14px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; color: #475569; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <i class="fa-solid fa-phone-volume" style="margin-right: 8px; color: #64748b; font-size: 16px;"></i> Hubungi Teknisi
+                </button>
+                ${!isResolved ? `
+                <button onclick="resolveAlert('${alertObj.id}'); closeAlertDetail();" style="flex: 1; padding: 14px; background: #16a34a; border: none; border-radius: 8px; font-weight: 600; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                    <i class="fa-solid fa-circle-check" style="margin-right: 8px; font-size: 16px;"></i> Resolve
+                </button>
+                ` : `
+                <button disabled style="flex: 1; padding: 14px; background: #cbd5e1; border: none; border-radius: 8px; font-weight: 600; color: white; display: flex; justify-content: center; align-items: center; cursor: not-allowed;">
+                    <i class="fa-solid fa-check-double" style="margin-right: 8px; font-size: 16px;"></i> Resolved
+                </button>
+                `}
+                <button onclick="stopPsc('${alertObj.imo}', '${alertObj.id}'); closeAlertDetail();" style="flex: 1; padding: 14px; background: #dc2626; border: none; border-radius: 8px; font-weight: 600; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+                    <i class="fa-solid fa-power-off" style="margin-right: 8px; font-size: 16px;"></i> Stop PSC
+                </button>
+            </div>
+        </div>
     `;
-    document.getElementById("alertDetailModal").style.display = "block";
+
+    document.getElementById("alertDetailModal").style.display = "flex";
 }
 
 function closeAlertDetail() {
@@ -495,16 +817,42 @@ function closeAlertDetail() {
 // ALERT MODAL
 // ===============================
 let alertTimeout;
-function showAlert() {
+function showAlert(alertObj) {
     const modal = document.getElementById("alertModal");
-    if (modal && modal.style.display !== "block") {
-        modal.style.display = "block";
+    if (!modal) return;
+    
+    let levelColor = "#ef4444";
+    if (alertObj && alertObj.level === "Critical") levelColor = "#b91c1c";
+    else if (alertObj && alertObj.level === "Medium") levelColor = "#f97316";
+    else if (alertObj && alertObj.level === "Low") levelColor = "#eab308";
+    
+    const shipName = alertObj ? alertObj.ship : "Kapal";
+    const jenis = alertObj ? alertObj.jenis : "Konsumsi daya tinggi";
+    const IMO = alertObj ? alertObj.imo : "-";
 
-        clearTimeout(alertTimeout);
-        alertTimeout = setTimeout(() => {
-            closeModal();
-        }, 5000);
-    }
+    modal.innerHTML = `
+        <div class="modal-content" style="border-left: 5px solid ${levelColor}; border-radius: 8px; width: 400px; max-width: 90%; background: white; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="color: ${levelColor}; margin-bottom: 15px; font-size: 18px; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-triangle-exclamation" style="margin-right: 8px; font-size: 20px;"></i> Gangguan: ${alertObj ? alertObj.level : 'High'}</span>
+                <button onclick="closeModal()" style="background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </h3>
+            <div style="font-size: 14px; line-height: 1.6; color: #334155;">
+                <p style="margin-bottom: 5px;"><strong>Kapal:</strong> <span style="color: #0f172a; font-weight: 600;">${shipName}</span> (IMO: ${IMO})</p>
+                <p style="margin-bottom: 10px;"><strong>Jenis:</strong> <span style="font-weight: 600; color: ${levelColor};">${jenis}</span></p>
+                <p style="font-size: 13px; color: #64748b; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">Harap lakukan pengecekan pada menu Alert Monitoring untuk penanganan.</p>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="window.location.hash='alert'; closeModal();" style="flex: 1; padding: 10px; background: ${levelColor}; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; opacity: 0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">Lihat Detail Alert</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = "flex";
+
+    clearTimeout(alertTimeout);
+    alertTimeout = setTimeout(() => {
+        closeModal();
+    }, 8000);
 }
 
 function closeModal() {
@@ -606,6 +954,34 @@ function renderHistory() {
     document.getElementById("totalTransaksi").innerText = filteredData.length;
     document.getElementById("totalEnergiHistory").innerText = totalEnergi.toLocaleString() + " kWh";
     document.getElementById("totalCO2History").innerText = totalCO2.toFixed(2) + " kg";
+
+    // Populate Second Table (Disconnected Ships Only)
+    const tbodyDisconnected = document.getElementById("historyDisconnectedList");
+    if (tbodyDisconnected) {
+        tbodyDisconnected.innerHTML = "";
+        
+        let disconnectIndex = 1;
+        // historyData alone (without activeSessions) is our disconnected log
+        const disconnectedData = historyData.filter(item => {
+            const matchDate = !filterDate || item.dateOnly === filterDate;
+            const matchShip = !filterShipIMO || item.imo === filterShipIMO;
+            return matchDate && matchShip;
+        });
+
+        disconnectedData.slice(-30).reverse().forEach((item) => {
+            const row = document.createElement("tr");
+            
+            row.innerHTML = `
+                <td>${disconnectIndex++}</td>
+                <td style="font-weight: 500; color: #0f172a;">${item.ship}</td>
+                <td>${item.imo}</td>
+                <td>${item.startTime || item.time || "-"}</td>
+                <td>${item.endTime || "-"}</td>
+                <td><span class="badge-disconnected">${item.status}</span></td>
+            `;
+            tbodyDisconnected.appendChild(row);
+        });
+    }
 }
 // ===============================
 // PLANNING SANDAR
