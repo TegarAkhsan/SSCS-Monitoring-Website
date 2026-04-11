@@ -13,15 +13,33 @@ let totalEnergy = 0;
 // LOKAL DATABASE SYSTEM (localStorage)
 // ===============================
 const defaultShips = [
-    { name: "MT SK LINE 1", type: "Oil Tanker", imo: "9705940" },
-    { name: "MT NONI T", type: "Oil Tanker", imo: "9520754" },
-    { name: "MT ACCORD", type: "Oil Tanker", imo: "9274020" },
-    { name: "MP MR TANKER 1", type: "Chemical/Oil", imo: "9472763" },
-    { name: "MT SHOKAI", type: "Oil & Chemical", imo: "9940710" },
-    { name: "BUNGA KELANA 10", type: "Oil Tanker", imo: "9292981" }
+    { name: "MV. MEGHNA LIBERTY", type: "KPLCURAHKR", imo: "I000036365", noPpk: "V92690000470426", noPrc: "OP92690000410426", kegiatan: "MUAT", grt: 31877, loa: 189.99, voyage: "LUARNEGERI" },
+    { name: "MV. SUN PLENTY", type: "Curah Kering", imo: "K001016851", noPpk: "V92690000460426", noPrc: "OP92690000400426", kegiatan: "BONGKAR", grt: 32415, loa: 189.99, voyage: "LUARNEGERI" },
+    { name: "MV. GLORY DYNASTY", type: "KPLCARGO", imo: "I000013810", noPpk: "V92690000450326", noPrc: "OP92690000390326", kegiatan: "BONGKAR", grt: 6632, loa: 103.63, voyage: "LUARNEGERI" },
+    { name: "MV. XIN HANG 9", type: "KPLCARGO", imo: "I000043068", noPpk: "V92690000440326", noPrc: "OP92690000380326", kegiatan: "BONGKAR", grt: 9160, loa: 136, voyage: "LUARNEGERI" },
+    { name: "BALI STRAIT", type: "Curah Kering", imo: "K001015659", noPpk: "V92690000430326", noPrc: "OP92690000370326", kegiatan: "BONGKAR", grt: 10248, loa: 149.7, voyage: "DALAMNEGERI" },
+    { name: "MV. ROSTRUM AUSTRALIA", type: "Curah Kering", imo: "K001016909", noPpk: "V92690000410326", noPrc: "OP92690000360326", kegiatan: "BONGKAR", grt: 25859, loa: 179.97, voyage: "LUARNEGERI" },
+    { name: "MV. MALTEZA", type: "Curah Kering", imo: "K001016760", noPpk: "V92690000400326", noPrc: "OP92690000350326", kegiatan: "BONGKAR", grt: 31250, loa: 189.99, voyage: "LUARNEGERI" },
+    { name: "MV. DK ARTEMIS", type: "Curah Kering", imo: "K001013556", noPpk: "V92690000380326", noPrc: "OP92690000340326", kegiatan: "BONGKAR", grt: 7506, loa: 110.49, voyage: "LUARNEGERI" },
+    { name: "MV. DEVBULK DEMET", type: "KPLCARGO", imo: "I000027695", noPpk: "V92690000360326", noPrc: "OP92690000330326", kegiatan: "BONGKAR", grt: 19999, loa: 178.7, voyage: "LUARNEGERI" },
+    { name: "XIN YI BO LI 01", type: "Curah Kering", imo: "K001015594", noPpk: "V92690000350326", noPrc: "OP92690000320326", kegiatan: "BONGKAR", grt: 3666, loa: 98.8, voyage: "LUARNEGERI" }
 ];
 
 let ships = JSON.parse(localStorage.getItem("psc_ships")) || defaultShips;
+
+// Reset ships database to ensure new data is loaded properly once
+if (!localStorage.getItem("data_reset_v4")) {
+    localStorage.removeItem("psc_ships");
+    localStorage.removeItem("psc_history");
+    localStorage.removeItem("psc_planning");
+    localStorage.removeItem("psc_alert");
+    localStorage.removeItem("psc_states");
+    localStorage.removeItem("psc_sessions");
+    localStorage.setItem("data_reset_v4", "true");
+    
+    ships = defaultShips;
+}
+
 let historyData = JSON.parse(localStorage.getItem("psc_history")) || [];
 let planningData = JSON.parse(localStorage.getItem("psc_planning")) || [];
 let alertData = JSON.parse(localStorage.getItem("psc_alert")) || [];
@@ -220,6 +238,7 @@ window.onload = async function () {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 animation: false
             }
         });
@@ -240,6 +259,7 @@ window.onload = async function () {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 animation: false
             }
         });
@@ -1116,16 +1136,23 @@ function renderReportShipList(filter = "") {
 
         const tr = document.createElement("tr");
 
-        tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td style="font-weight: 600; color: #1e293b;">${ship.name}</td>
-            <td>${ship.imo}</td>
-            <td>${ship.type}</td>
-            <td style="text-align: center;">
-                <button onclick="downloadShipReport('${ship.imo}')" style="background: #10b981; color: white; padding: 6px 12px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
-                    <i class="fa-solid fa-download" style="margin-right: 5px;"></i> Unduh
+        const aksiBtn = `
+                <button onclick="downloadShipReport('${ship.imo}')" style="background: #0ea5e9; color: white; width: 32px; height: 32px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(14,165,233,0.2);">
+                    <i class="fa-solid fa-arrow-right"></i>
                 </button>
-            </td>
+        `;
+
+        tr.innerHTML = `
+            <td>${aksiBtn}</td>
+            <td style="color: #64748b;">${ship.noPpk || "-"}</td>
+            <td style="color: #64748b;">${ship.noPrc || "-"}</td>
+            <td style="color: #64748b;">${ship.kegiatan || "-"}</td>
+            <td style="color: #64748b;">${ship.type || "-"}</td>
+            <td style="color: #64748b;">${ship.imo || "-"}</td>
+            <td style="color: #64748b;">${ship.name || "-"}</td>
+            <td style="color: #64748b;">${ship.grt || "-"}</td>
+            <td style="color: #64748b;">${ship.loa || "-"}</td>
+            <td style="color: #64748b;">${ship.voyage || "-"}</td>
         `;
         container.appendChild(tr);
     });
@@ -1154,42 +1181,34 @@ function downloadShipReport(imo) {
     if (!ship) return;
 
     let totalEnergiKapal = 0;
-    let detailHistory = "";
+    
+    let csvData = "Waktu,Nama Kapal,IMO,Energi (kWh)\n";
 
     historyData.forEach(h => {
         if (h.imo === imo) {
             totalEnergiKapal += h.energy;
-            detailHistory += `${h.time} - ${h.energy} kWh\n`;
+            csvData += `"${h.startTime || h.time}","${h.ship}","${h.imo}",${h.energy}\n`;
         }
     });
 
-    let report = `PSC ENERGY REPORT: ${ship.name} (IMO: ${ship.imo})\n\n`;
-    report += "Total Energi: " + totalEnergiKapal + " kWh\n";
-    report += "Estimasi CO2: " + (totalEnergiKapal * 0.0027).toFixed(2) + " kg\n\n";
-    report += "Detail History:\n" + (detailHistory || "Tidak ada data riwayat.");
-
-    const blob = new Blob([report], { type: "text/plain" });
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Report_${ship.name.replace(/\s+/g, "_")}.txt`;
+    link.download = `Report_${ship.name.replace(/\s+/g, "_")}.csv`;
     link.click();
 }
 
 function downloadReport() {
-
-    let report = "PSC DAILY ENERGY REPORT\n\n";
-    report += "Total Energi: " + totalEnergy + " kWh\n";
-    report += "Estimasi CO2: " + (totalEnergy * 0.0027).toFixed(2) + " kg\n\n";
-    report += "Detail History:\n";
+    let csvData = "Waktu,Nama Kapal,IMO,Energi (kWh),Estimasi CO2 (kg)\n";
 
     historyData.forEach(h => {
-        report += `${h.time} - ${h.ship} (IMO: ${h.imo}) - ${h.energy} kWh\n`;
+        csvData += `"${h.startTime || h.time}","${h.ship}","${h.imo}",${h.energy},${(h.energy * 0.0027).toFixed(2)}\n`;
     });
 
-    const blob = new Blob([report], { type: "text/plain" });
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "PSC_Daily_Report.txt";
+    link.download = "PSC_Daily_Report.csv";
     link.click();
 }
 
