@@ -812,7 +812,7 @@ function openAlertDetail(id) {
                     <i class="fa-solid fa-phone-volume" style="margin-right: 8px; color: #64748b; font-size: 16px;"></i> Hubungi Teknisi
                 </button>
                 ${!isResolved ? `
-                <button onclick="resolveAlert('${alertObj.id}'); closeAlertDetail();" style="flex: 1; padding: 14px; background: #16a34a; border: none; border-radius: 8px; font-weight: 600; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                <button onclick="animateResolve('${alertObj.id}')" style="flex: 1; padding: 14px; background: #16a34a; border: none; border-radius: 8px; font-weight: 600; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
                     <i class="fa-solid fa-circle-check" style="margin-right: 8px; font-size: 16px;"></i> Resolve
                 </button>
                 ` : `
@@ -820,7 +820,7 @@ function openAlertDetail(id) {
                     <i class="fa-solid fa-check-double" style="margin-right: 8px; font-size: 16px;"></i> Resolved
                 </button>
                 `}
-                <button onclick="stopPsc('${alertObj.imo}', '${alertObj.id}'); closeAlertDetail();" style="flex: 1; padding: 14px; background: #dc2626; border: none; border-radius: 8px; font-weight: 600; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+                <button onclick="animateStopPsc('${alertObj.imo}', '${alertObj.id}')" style="flex: 1; padding: 14px; background: #dc2626; border: none; border-radius: 8px; font-weight: 600; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
                     <i class="fa-solid fa-power-off" style="margin-right: 8px; font-size: 16px;"></i> Stop PSC
                 </button>
             </div>
@@ -832,6 +832,89 @@ function openAlertDetail(id) {
 
 function closeAlertDetail() {
     document.getElementById("alertDetailModal").style.display = "none";
+}
+
+function animateResolve(alertId) {
+    showActionAnimation('resolve', () => {
+        resolveAlert(alertId);
+        closeAlertDetail();
+    });
+}
+
+function animateStopPsc(imo, alertId) {
+    showActionAnimation('stop-psc', () => {
+        stopPsc(imo, alertId);
+        closeAlertDetail();
+    });
+}
+
+function showActionAnimation(type, callback) {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); transition: opacity 0.3s;";
+    
+    let iconHTML = '';
+    if (type === 'resolve') {
+        iconHTML = `<div style="font-size: 80px; color: #16a34a; animation: bounceIn 0.5s ease-out both;"><i class="fa-solid fa-circle-check"></i></div>
+                    <div style="margin-top: 20px; font-size: 24px; font-weight: bold; color: #16a34a; animation: fadeInUp 0.5s ease-out 0.2s both;">Berhasil Diatasi!</div>`;
+    } else {
+        iconHTML = `<div style="font-size: 80px; color: #dc2626; display: flex; align-items: center; justify-content: center; animation: shakeBreak 0.7s ease-out both;">
+                        <i class="fa-solid fa-plug" style="transform: rotate(90deg);"></i>
+                        <i class="fa-solid fa-bolt flash-bolt" style="color: #f59e0b; font-size: 40px; margin: 0 5px;"></i>
+                        <i class="fa-solid fa-plug" style="transform: rotate(-90deg);"></i>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 24px; font-weight: bold; color: #dc2626; animation: fadeInUp 0.5s ease-out 0.2s both;">Koneksi PSC Terputus!</div>`;
+    }
+    
+    const content = document.createElement("div");
+    content.style.cssText = "text-align: center; display: flex; flex-direction: column; align-items: center;";
+    content.innerHTML = iconHTML;
+    
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+    
+    if (!document.getElementById("action-animations")) {
+        const style = document.createElement("style");
+        style.id = "action-animations";
+        style.innerHTML = `
+            @keyframes bounceIn {
+                0% { opacity: 0; transform: scale(0.3); }
+                50% { opacity: 1; transform: scale(1.05); }
+                70% { transform: scale(0.9); }
+                100% { transform: scale(1); }
+            }
+            @keyframes fadeInUp {
+                0% { opacity: 0; transform: translateY(20px); }
+                100% { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes shakeBreak {
+                0% { transform: translateX(0) scale(1); gap: 0px; }
+                10%, 30%, 50% { transform: translateX(-10px) scale(1.1); gap: 0px; }
+                20%, 40%, 60% { transform: translateX(10px) scale(1.1); gap: 0px; }
+                70%, 100% { transform: translateX(0) scale(1.1); gap: 80px; }
+            }
+            .flash-bolt {
+                animation: flash 0.3s infinite;
+            }
+            @keyframes flash {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    setTimeout(() => {
+        const bolt = overlay.querySelector('.flash-bolt');
+        if (bolt) bolt.style.display = 'none';
+    }, 400);
+
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            callback();
+        }, 300);
+    }, 1500);
 }
 // ===============================
 // ALERT MODAL
