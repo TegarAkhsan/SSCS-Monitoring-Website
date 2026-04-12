@@ -808,7 +808,7 @@ function openAlertDetail(id) {
             </div>
 
             <div style="display: flex; gap: 15px; justify-content: space-between;">
-                <button style="flex: 1; padding: 14px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; color: #475569; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                <button onclick="window.open('https://wa.me/6281334352191', '_blank')" style="flex: 1; padding: 14px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; color: #475569; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
                     <i class="fa-solid fa-phone-volume" style="margin-right: 8px; color: #64748b; font-size: 16px;"></i> Hubungi Teknisi
                 </button>
                 ${!isResolved ? `
