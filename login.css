@@ -39,9 +39,9 @@ body {
 /* LEFT PANEL (Blue Side) */
 .left-panel {
   flex: 1;
-  background: #256b9c;
+  background: #ffffff;
   /* The exact blue from the screenshot */
-  color: white;
+  color: #333;
   padding: 40px;
   display: flex;
   flex-direction: column;
@@ -101,7 +101,8 @@ body {
 }
 
 .feature-list-container {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(37, 107, 156, 0.05);
+  border: 1px solid rgba(37, 107, 156, 0.1);
   border-radius: 12px;
   padding: 30px;
   margin-top: auto;
@@ -125,8 +126,8 @@ body {
 }
 
 .feature-list i {
-  color: #ffd100;
-  /* Yellow accent */
+  color: #256b9c;
+  /* Blue accent */
   margin-right: 15px;
   font-size: 16px;
   width: 20px;
@@ -136,7 +137,7 @@ body {
 .left-footer {
   text-align: center;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
   z-index: 1;
 }
 
@@ -145,13 +146,13 @@ body {
 }
 
 .left-footer strong {
-  color: white;
+  color: #333;
 }
 
 /* RIGHT PANEL (White/Form Side) */
 .right-panel {
   flex: 1;
-  background: #ffffff;
+  background: #256b9c;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -197,13 +198,13 @@ body {
 .welcome-text h2 {
   font-size: 20px;
   font-weight: 700;
-  color: #333;
+  color: white;
   margin-bottom: 5px;
 }
 
 .welcome-text p {
   font-size: 14px;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .alert-box {
@@ -225,7 +226,7 @@ body {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #333;
+  color: white;
   margin-bottom: 8px;
 }
 
@@ -237,6 +238,7 @@ body {
 
 .input-wrapper input {
   width: 100%;
+  background: #fff;
   padding: 12px 12px 12px 40px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -300,8 +302,8 @@ body {
 
 .login-btn {
   width: 100%;
-  background: #256b9c;
-  color: white;
+  background: #ffffff;
+  color: #256b9c;
   border: none;
   padding: 14px;
   border-radius: 6px;
@@ -312,12 +314,12 @@ body {
 }
 
 .login-btn:hover:not(:disabled) {
-  background: #1e5a84;
+  background: #f1f5f9;
 }
 
 .login-btn:disabled {
-  background: #758094;
-  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.5);
+  color: rgba(37, 107, 156, 0.6);
   cursor: not-allowed;
 }
 
@@ -345,7 +347,7 @@ body {
 .tab-container {
   display: flex;
   margin-bottom: 20px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .tab-btn {
@@ -355,7 +357,7 @@ body {
   padding: 10px;
   font-size: 15px;
   font-weight: 600;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px; /* overlap structural border */
@@ -363,10 +365,10 @@ body {
 }
 
 .tab-btn:hover {
-  color: #256b9c;
+  color: white;
 }
 
 .tab-btn.active {
-  color: #256b9c;
-  border-bottom: 2px solid #256b9c;
+  color: white;
+  border-bottom: 2px solid white;
 }
