@@ -1,71 +1,89 @@
-# SSCS Monitoring Website
+# SSCS Monitoring Website — Setup Guide
 
-Website ini adalah aplikasi monitoring kapal (Ship Monitoring System) yang dibangun menggunakan HTML, CSS, dan JavaScript murni. Aplikasi ini dirancang untuk menampilkan dashboard analitik, daftar kapal, detail monitoring, riwayat, peringatan (alerts), laporan, dan perencanaan.
+## Prasyarat
+- **Laragon** (Apache + PHP >= 7.4 + MySQL/MariaDB)
+- Pastikan `mod_rewrite` aktif di Apache
 
-Aplikasi ini menggunakan pendekatan berbasis komponen secara native di mana bagian-bagian halaman dipisahkan ke dalam file-file komponen di folder `components/` dan dimuat secara dinamis menggunakan JavaScript.
+---
 
-## 🚀 Cara Menjalankan Project (Live Server)
+## Langkah Setup
 
-Karena project ini memuat file komponen secara dinamis menggunakan `fetch` API di JavaScript, Anda **tidak bisa** membukanya hanya dengan klik ganda file `index.html` (akan terjadi error CORS). Anda harus menjalankannya melalui local web server.
-
-Cara termudah adalah menggunakan ekstensi **Live Server** di Visual Studio Code (VS Code).
-
-### Cara Clone Project dari GitHub:
-1. Pastikan Anda sudah menginstal [Git](https://git-scm.com/) di komputer Anda.
-2. Buka terminal atau command prompt.
-3. Jalankan perintah berikut untuk mengkloning repositori ini:
-   ```bash
-   git clone https://github.com/TegarAkhsan/SSCS-Monitoring-Website.git
-   ```
-4. Masuk ke folder project hasil clone:
-   ```bash
-   cd SSCS-Monitoring-Website
-   ```
-
-### Prasyarat:
-1. Telah menginstal [Visual Studio Code](https://code.visualstudio.com/).
-
-### Langkah-langkah:
-
-1. **Buka Project di VS Code:**
-   Buka folder project `SSCS Monitoring Website` di dalam Visual Studio Code.
-
-2. **Instal Ekstensi Live Server:**
-   * Di VS Code, buka panel **Extensions** (tekan `Ctrl+Shift+X` atau klik ikon kotak-kotak di menu samping kiri).
-   * Pada kotak pencarian, ketik **"Live Server"**.
-   * Cari ekstensi bernama **Live Server** (biasanya oleh Ritwick Dey) dan klik tombol **Install**.
-
-3. **Jalankan Live Server:**
-   Ada beberapa cara untuk menjalankan Live Server:
-   * **Cara 1:** Buka file `index.html`, lalu klik kanan di area kode dan pilih **"Open with Live Server"**.
-   * **Cara 2:** Buka file `index.html`, lalu klik tombol **"Go Live"** yang ada di pojok kanan bawah jendela VS Code (status bar).
-   * **Cara 3:** Gunakan shortcut keyboard: `Alt+L` lalu tekan `Alt+O`.
-
-4. **Selesai:**
-   Browser default Anda otomatis akan terbuka dan menampilkan aplikasi di alamat `http://127.0.0.1:5500/index.html` (atau port lain tergantung ketersediaan).
-   Aplikasi dan semua komponennya (Dashboard, Monitoring, dll) akan dimuat dengan sempurna.
-
-## 📂 Struktur Project
-
-```text
-SSCS Monitoring Website/
-├── index.html       # Halaman utama (kerangka/layout)
-├── login.html       # Halaman login
-├── README.md        # Dokumentasi project
-├── css/
-│   └── style.css    # Gaya/styling keseluruhan website
-├── js/
-│   └── app.js       # Logika utama (termasuk loader komponen)
-├── components/      # Folder berisi potongan halaman (komponen)
-│   ├── alert.html
-│   ├── dashboard.html
-│   ├── history.html
-│   ├── laporan.html
-│   ├── monitoring.html
-│   └── planning.html
-└── assets/          # (Opsional) Folder untuk gambar/icon jika ada
+### 1. Letakkan Proyek
+Salin folder ini ke direktori web Laragon:
+```
+C:\laragon\www\sscs-monitoring\
 ```
 
-## 📝 Catatan Tambahan
-* Jika Anda membuat perubahan pada file HTML, CSS, atau JavaScript, Live Server akan secara otomatis memuat ulang (auto-reload) halaman browser sehingga Anda dapat melihat perubahannya secara instan.
-* Pastikan Anda selalu membuka dari `index.html` atau `login.html`.
+### 2. Buat Database
+1. Buka **phpMyAdmin** di `http://localhost/phpmyadmin`
+2. Import file: `database/sscs_db.sql`
+3. Database `sscs_db` akan terbuat otomatis
+
+### 3. Konfigurasi Database
+Edit file `backend/config/database.php` jika perlu:
+```php
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'sscs_db');
+define('DB_USER', 'root');
+define('DB_PASS', '');          // ganti jika ada password MySQL
+```
+
+### 4. Akses Aplikasi
+Buka browser ke:
+```
+http://localhost/sscs-monitoring/frontend/
+```
+
+### 5. Login Default
+| Username | Password |
+|----------|----------|
+| admin    | admin123 |
+
+---
+
+## Struktur Folder
+
+```
+sscs-monitoring/
+├── backend/              ← PHP Backend (MVC)
+│   ├── config/           ← Konfigurasi database
+│   ├── controllers/      ← Controller per resource
+│   ├── middleware/       ← Auth middleware
+│   ├── models/           ← Model PDO
+│   ├── routes/           ← API router
+│   └── index.php         ← Entry point backend
+├── frontend/             ← Frontend (HTML/CSS/JS)
+│   ├── assets/           ← Gambar, ikon
+│   ├── components/       ← HTML partials
+│   ├── css/              ← Stylesheet
+│   ├── js/
+│   │   ├── api.js        ← Helper fetch ke API
+│   │   └── app.js        ← Logika utama
+│   ├── index.html        ← Halaman dashboard
+│   ├── login.html        ← Halaman login
+│   └── login.js          ← Login logic
+└── database/
+    └── sscs_db.sql       ← Schema + seed data MySQL
+```
+
+---
+
+## API Endpoints
+
+| Method | URL | Deskripsi |
+|--------|-----|-----------|
+| POST | `/backend/auth/login` | Login |
+| POST | `/backend/auth/register` | Register |
+| POST | `/backend/auth/logout` | Logout |
+| GET | `/backend/auth/me` | Cek session |
+| GET | `/backend/ships` | List kapal |
+| POST | `/backend/ships` | Tambah kapal |
+| POST | `/backend/ships/{imo}/stop` | Stop PSC |
+| GET | `/backend/alerts` | List alert |
+| PUT | `/backend/alerts/{id}/resolve` | Resolve alert |
+| GET | `/backend/history` | Riwayat sesi |
+| GET | `/backend/planning` | List planning |
+| POST | `/backend/planning` | Tambah jadwal |
+| POST | `/backend/planning/{id}/run` | Jalankan jadwal |
+| GET | `/backend/simulation/tick` | Tick simulasi (poll 3s) |
+| POST | `/backend/simulation/stop/{imo}` | Stop PSC via simulasi |

@@ -1,0 +1,314 @@
+<!-- ================= PLANNING ================= -->
+<style>
+    .planning-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .planning-input-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .planning-input {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.2s;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .planning-input:focus {
+        border-color: #256b9c;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(37, 107, 156, 0.1);
+    }
+
+    .btn-planning {
+        padding: 12px 20px;
+        background: #256b9c;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px rgba(37, 107, 156, 0.2);
+        height: 42px;
+        width: 100%;
+    }
+
+    .btn-planning:hover {
+        background: #1e5a84;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 10px rgba(37, 107, 156, 0.3);
+    }
+
+    .planning-card {
+        background: white;
+        padding: 18px 22px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        transition: all 0.2s;
+    }
+
+    .planning-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .planning-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    .planning-meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Edit Modal */
+    #planEditModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #planEditModal.active {
+        display: flex;
+    }
+
+    .plan-modal-box {
+        background: white;
+        border-radius: 16px;
+        width: 680px;
+        max-width: 95vw;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .plan-modal-header {
+        background: linear-gradient(135deg, #475569, #334155);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 16px 16px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .plan-modal-body {
+        padding: 25px;
+    }
+
+    .plan-modal-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+</style>
+
+<div id="planning" class="page">
+    <div class="container">
+
+        <!-- Header Banner -->
+        <div class="welcome-banner"
+            style="background: linear-gradient(135deg, #475569, #334155); color: white; padding: 25px 30px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(51, 65, 85, 0.2);">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div
+                    style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px;">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h2 style="font-size: 24px; margin-bottom: 5px;">Planning Sandar Kapal</h2>
+                    <p style="font-size: 14px; opacity: 0.9;">Jadwalkan dan kelola koneksi Power Shore kapal mendatang</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Planning Form -->
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 30px;">
+            <div style="padding: 18px 25px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+                <h3 style="font-size: 16px; color: #1e293b; display: flex; align-items: center; margin: 0;">
+                    <span style="background: #f1f5f9; width: 32px; height: 32px; display: inline-flex; justify-content: center; align-items: center; border-radius: 8px; margin-right: 12px;">
+                        <i class="fa-solid fa-plus" style="color: #64748b; font-size: 14px;"></i>
+                    </span>
+                    Tambah Jadwal Baru
+                </h3>
+            </div>
+            <div style="padding: 20px 25px;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+                    <!-- Row 1 -->
+                    <div class="planning-input-group" style="grid-column: span 2;">
+                        <label>Nama Kapal</label>
+                        <input type="text" id="planShipName" placeholder="Nama kapal..." class="planning-input">
+                    </div>
+                    <div class="planning-input-group">
+                        <label>Dermaga</label>
+                        <select id="planDermaga" class="planning-input">
+                            <option value="">-- Dermaga --</option>
+                            <option value="DL">DL</option>
+                            <option value="DB">DB</option>
+                            <option value="LL">LL</option>
+                            <option value="LB">LB</option>
+                        </select>
+                    </div>
+                    <div class="planning-input-group">
+                        <label>Kegiatan</label>
+                        <select id="planKegiatan" class="planning-input">
+                            <option value="BONGKAR">BONGKAR</option>
+                            <option value="MUAT">MUAT</option>
+                            <option value="BONGKAR MUAT">BONGKAR MUAT</option>
+                        </select>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div class="planning-input-group" style="grid-column: span 2;">
+                        <label>Waktu Sandar (ETA)</label>
+                        <input type="datetime-local" id="planDate" class="planning-input">
+                    </div>
+                    <div class="planning-input-group" style="grid-column: span 2;">
+                        <label>Estimasi Selesai (ETD)</label>
+                        <input type="datetime-local" id="planEtd" class="planning-input">
+                    </div>
+
+                    <!-- Row 3 -->
+                    <div class="planning-input-group">
+                        <label>No. PPK</label>
+                        <input type="text" id="planNoPpk" placeholder="Nomor PPK..." class="planning-input">
+                    </div>
+                    <div class="planning-input-group">
+                        <label>No. PRC</label>
+                        <input type="text" id="planNoPrc" placeholder="Nomor PRC..." class="planning-input">
+                    </div>
+                    <div class="planning-input-group">
+                        <label>GRT</label>
+                        <input type="number" id="planGrt" placeholder="GRT..." class="planning-input" min="0">
+                    </div>
+                    <div class="planning-input-group">
+                        <label>LOA (m)</label>
+                        <input type="number" id="planLoa" placeholder="LOA..." class="planning-input" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Submit Button Row -->
+                <button onclick="addPlanning()" class="btn-planning" style="width: 100%; height: 48px; font-size: 15px;">
+                    <i class="fa-solid fa-paper-plane"></i> Simpan Jadwal
+                </button>
+            </div>
+        </div>
+
+        <!-- Planning List Display -->
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); overflow: hidden;">
+            <div style="padding: 18px 25px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+                <h3 style="font-size: 16px; color: #1e293b; display: flex; align-items: center; margin: 0;">
+                    <span style="background: #f1f5f9; width: 32px; height: 32px; display: inline-flex; justify-content: center; align-items: center; border-radius: 8px; margin-right: 12px;">
+                        <i class="fa-solid fa-list-check" style="color: #64748b; font-size: 14px;"></i>
+                    </span>
+                    Daftar Antrean &amp; Jadwal
+                </h3>
+            </div>
+            <div style="padding: 25px; background: #f8fafc; min-height: 200px;">
+                <ul id="planningList" style="list-style: none; padding: 0; margin: 0;"></ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== EDIT PLANNING MODAL ===== -->
+<div id="planEditModal">
+    <div class="plan-modal-box">
+        <div class="plan-modal-header">
+            <h3 style="margin:0;font-size:18px;font-weight:700;"><i class="fa-solid fa-pen-to-square" style="margin-right:10px;"></i>Edit Jadwal Kapal</h3>
+            <button onclick="closePlanEditModal()" style="background:transparent;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;">×</button>
+        </div>
+        <div class="plan-modal-body">
+            <input type="hidden" id="editPlanId">
+            <div class="plan-modal-grid" style="margin-bottom:16px;">
+                <div class="planning-input-group" style="grid-column: span 2;">
+                    <label>Nama Kapal</label>
+                    <input type="text" id="editPlanShipName" placeholder="Nama kapal..." class="planning-input">
+                </div>
+                <div class="planning-input-group">
+                    <label>Waktu Sandar (ETA)</label>
+                    <input type="datetime-local" id="editPlanDate" class="planning-input">
+                </div>
+                <div class="planning-input-group">
+                    <label>Estimasi Selesai (ETD)</label>
+                    <input type="datetime-local" id="editPlanEtd" class="planning-input">
+                </div>
+                <div class="planning-input-group">
+                    <label>Dermaga</label>
+                    <select id="editPlanDermaga" class="planning-input">
+                        <option value="DL">Dalam Lama (DL)</option>
+                        <option value="DB">Dalam Baru (DB)</option>
+                        <option value="LL">Luar Lama (LL)</option>
+                        <option value="LB">Luar Baru (LB)</option>
+                    </select>
+                </div>
+                <div class="planning-input-group">
+                    <label>Kegiatan</label>
+                    <select id="editPlanKegiatan" class="planning-input">
+                        <option value="BONGKAR">BONGKAR</option>
+                        <option value="MUAT">MUAT</option>
+                        <option value="BONGKAR MUAT">BONGKAR MUAT</option>
+                    </select>
+                </div>
+                <div class="planning-input-group">
+                    <label>No. PPK</label>
+                    <input type="text" id="editPlanNoPpk" placeholder="Nomor PPK..." class="planning-input">
+                </div>
+                <div class="planning-input-group">
+                    <label>No. PRC</label>
+                    <input type="text" id="editPlanNoPrc" placeholder="Nomor PRC..." class="planning-input">
+                </div>
+                <div class="planning-input-group">
+                    <label>GRT</label>
+                    <input type="number" id="editPlanGrt" placeholder="GRT..." class="planning-input" min="0">
+                </div>
+                <div class="planning-input-group">
+                    <label>LOA (m)</label>
+                    <input type="number" id="editPlanLoa" placeholder="LOA..." class="planning-input" min="0" step="0.01">
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+                <button onclick="closePlanEditModal()" style="padding:11px 24px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">Batal</button>
+                <button onclick="submitEditPlanning()" style="padding:11px 24px;background:#256b9c;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+</div>

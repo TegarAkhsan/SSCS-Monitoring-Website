@@ -71,7 +71,7 @@
                     <i class="fa-solid fa-receipt"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Total Transaksi
+                    <p style="color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Total Kegiatan
                     </p>
                     <h2 id="totalTransaksi" style="font-size: 30px; color: #0f172a;">0</h2>
                 </div>
@@ -119,7 +119,12 @@
                     Data Riwayat Kapal
                 </h3>
 
-                <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <!-- Search by ship name -->
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; color: #94a3b8; font-size: 14px; pointer-events: none;"></i>
+                        <input type="text" id="filterSearch" oninput="renderHistory()" placeholder="Cari nama kapal..." class="filter-input" style="padding-left: 36px; min-width: 200px;">
+                    </div>
                     <input type="date" id="filterDate" onchange="renderHistory()" class="filter-input">
                     <select id="filterShip" onchange="renderHistory()" class="filter-input" style="min-width: 180px;">
                         <option value="">Semua Kapal</option>

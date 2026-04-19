@@ -1,0 +1,12 @@
+Options -Indexes
+RewriteEngine On
+
+# Dinamis mendeteksi base path (berguna untuk localhost maupun virtual host)
+RewriteCond %{REQUEST_URI} ^/(.*?)/?$
+RewriteRule ^$ /%1/frontend/ [R=302,L]
+
+# Jika user terlanjur load file yg hilang (misal di-cache) redirect ke frontend/ dengan aman
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^/(.*?)/([^/]+)$
+RewriteRule ^([^/]+\.(html|js|css))$ /%1/frontend/$1 [R=302,L]

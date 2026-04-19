@@ -3,13 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>SSCS Monitoring Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSCS Monitoring Dashboard — Smart Shore Connection System</title>
+    <meta name="description" content="Sistem pemantauan cerdas penggunaan energi listrik dari darat ke kapal di pelabuhan.">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/style.css">
 
-    <!-- Include Font Awesome for Icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Chart.js -->
@@ -20,9 +21,6 @@
 
     <!-- ================= NAVBAR PLACEHOLDER ================= -->
     <div id="navbar-placeholder"></div>
-
-
-    <!-- ================= DAFTAR KAPAL (REMOVED) ================= -->
 
     <!-- ================= DASHBOARD ================= -->
     <div id="dashboard-placeholder"></div>
@@ -42,11 +40,9 @@
     <!-- ================= PLANNING ================= -->
     <div id="planning-placeholder"></div>
 
-
-
-    <!-- ================= MODAL ALERT ================= -->
-    <div id="alertModal" class="modal" style="display: none; z-index: 10000; position: fixed; right: 20px; top: 20px; width: auto; height: auto;">
-        <!-- Filled dynamically by showAlert in app.js -->
+    <!-- ================= MODAL ALERT POPUP ================= -->
+    <div id="alertModal" class="modal" style="display:none;z-index:10000;position:fixed;right:20px;top:20px;width:auto;height:auto;">
+        <!-- Filled by showAlert() in app.js -->
     </div>
 
     <!-- ================= TOAST NOTIFICATION ================= -->
@@ -58,8 +54,9 @@
         <button onclick="closeToast()" class="toast-close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <!-- ================= SCRIPT ================= -->
-    <script src="js/app.js?v=2"></script>
+    <!-- ================= SCRIPTS ================= -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
 
 </body>
 

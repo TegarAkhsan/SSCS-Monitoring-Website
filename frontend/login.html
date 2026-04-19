@@ -3,9 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Login - Sistem Monitoring Energi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — SSCS Monitoring System</title>
+    <meta name="description" content="Login ke sistem monitoring Smart Shore Connection System (SSCS).">
     <link rel="stylesheet" href="login.css">
-    <!-- Include Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -17,10 +18,9 @@
             <!-- LEFT PANEL -->
             <div class="left-panel">
                 <div class="left-header">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <img src="../assets/img/Logo.jpeg" alt="Power Shore Connection" class="logo-danantara">
-                        <span style="font-size: 28px; font-weight: 800; letter-spacing: 1.5px; color: #256b9c;">Smart Shore Connection
-                            System</span>
+                    <div style="display:flex;align-items:center;gap:15px;">
+                        <img src="assets/img/Logo.jpeg" alt="SSCS Logo" class="logo-danantara">
+                        <span style="font-size:28px;font-weight:800;letter-spacing:1.5px;color:#256b9c;">Smart Shore Connection System</span>
                     </div>
                 </div>
 
@@ -28,19 +28,15 @@
                     <ul class="feature-list">
                         <li><i class="fa-solid fa-anchor"></i> Integrated Port Management</li>
                         <li><i class="fa-solid fa-chart-line"></i> Real-time Monitoring</li>
-                        <li><i class="fa-solid fa-shield-halved"></i> Secure & Reliable</li>
+                        <li><i class="fa-solid fa-shield-halved"></i> Secure &amp; Reliable</li>
                         <li><i class="fa-solid fa-users"></i> Professional Support</li>
                     </ul>
                 </div>
 
-                <div class="left-footer"
-                    style="padding: 15px; background: rgba(37, 107, 156, 0.05); border-radius: 8px; margin-top: 20px; border: 1px solid rgba(37, 107, 156, 0.1);">
-                    <p style="margin-bottom: 8px; font-size: 13px;"><i class="fa-brands fa-whatsapp"
-                            style="color: #25D366; font-size: 16px; margin-right: 8px;"></i><strong>Customer
-                            Service:</strong> +62 812-3456-7890</p>
-                    <p style="margin-bottom: 8px;"><strong>Support Helpdesk:</strong> 0.800.11.99999 (Free Call)</p>
-                    <p style="margin-top: 10px; border-top: 1px solid rgba(37, 107, 156, 0.1); padding-top: 10px;">© 2026
-                        Smart Shore Connection Systen</p>
+                <div class="left-footer" style="padding:15px;background:rgba(37,107,156,0.05);border-radius:8px;margin-top:20px;border:1px solid rgba(37,107,156,0.1);">
+                    <p style="margin-bottom:8px;font-size:13px;"><i class="fa-brands fa-whatsapp" style="color:#25D366;font-size:16px;margin-right:8px;"></i><strong>Customer Service:</strong> +62 812-3456-7890</p>
+                    <p style="margin-bottom:8px;"><strong>Support Helpdesk:</strong> 0.800.11.99999 (Free Call)</p>
+                    <p style="margin-top:10px;border-top:1px solid rgba(37,107,156,0.1);padding-top:10px;">© 2026 Smart Shore Connection System</p>
                 </div>
             </div>
 
@@ -50,18 +46,17 @@
                     <div class="welcome-text">
                         <h2 id="formTitle">Welcome Back</h2>
                         <p id="formSubtitle">Please sign in to your account</p>
-                        <p id="sscsDescription" style="font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 10px;">
+                        <p id="sscsDescription" style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:10px;">
                             SSCS (Smart Shore Connection System) adalah sistem pemantauan cerdas yang terintegrasi untuk mengelola, mengontrol, dan memantau penggunaan energi listrik dari darat ke kapal saat bersandar di pelabuhan.
                         </p>
                     </div>
 
-                    <div id="loginError" class="alert-box" style="display: none;">
-                        Security verification failed. Please try again.
+                    <div id="loginError" class="alert-box" style="display:none;">
+                        Login gagal. Silakan coba lagi.
                     </div>
 
-                    <div id="registerSuccess" class="alert-box"
-                        style="display: none; background: #e6ffed; color: #1e7e34; border-color: #c3e6cb;">
-                        Registration successful! You can now sign in.
+                    <div id="registerSuccess" class="alert-box" style="display:none;background:#e6ffed;color:#1e7e34;border-color:#c3e6cb;">
+                        Registrasi berhasil! Silakan login.
                     </div>
 
                     <div class="tab-container" id="mainTabs">
@@ -69,6 +64,7 @@
                         <button id="tabRegister" class="tab-btn" onclick="switchTab('register')">Register</button>
                     </div>
 
+                    <!-- LOGIN FORM -->
                     <form id="loginForm">
                         <div class="input-group">
                             <label>Username</label>
@@ -77,7 +73,6 @@
                                 <input type="text" id="username" placeholder="Enter your username" required>
                             </div>
                         </div>
-
                         <div class="input-group">
                             <label>Password</label>
                             <div class="input-wrapper">
@@ -86,15 +81,14 @@
                                 <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('password')"></i>
                             </div>
                         </div>
-
-                        <div style="text-align: right; margin-bottom: 15px;">
-                            <a href="#" onclick="switchTab('forgot'); return false;" style="font-size: 12px; color: white; text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                        <div style="text-align:right;margin-bottom:15px;">
+                            <a href="#" onclick="switchTab('forgot');return false;" style="font-size:12px;color:white;text-decoration:none;font-weight:600;">Forgot Password?</a>
                         </div>
-
                         <button type="submit" id="loginBtn" class="login-btn" disabled>Sign In</button>
                     </form>
 
-                    <form id="registerForm" style="display: none;">
+                    <!-- REGISTER FORM -->
+                    <form id="registerForm" style="display:none;">
                         <div class="input-group">
                             <label>Username</label>
                             <div class="input-wrapper">
@@ -102,7 +96,6 @@
                                 <input type="text" id="regUsername" placeholder="Choose a username" required>
                             </div>
                         </div>
-
                         <div class="input-group">
                             <label>Email</label>
                             <div class="input-wrapper">
@@ -110,31 +103,27 @@
                                 <input type="email" id="regEmail" placeholder="Enter your email" required>
                             </div>
                         </div>
-
                         <div class="input-group">
                             <label>Password</label>
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-lock input-icon"></i>
                                 <input type="password" id="regPassword" placeholder="Create a password" required>
-                                <i class="fa-regular fa-eye toggle-password"
-                                    onclick="togglePassword('regPassword')"></i>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('regPassword')"></i>
                             </div>
                         </div>
-
                         <div class="input-group">
                             <label>Confirm Password</label>
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-lock input-icon"></i>
                                 <input type="password" id="regConfirmPassword" placeholder="Confirm your password" required>
-                                <i class="fa-regular fa-eye toggle-password"
-                                    onclick="togglePassword('regConfirmPassword')"></i>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('regConfirmPassword')"></i>
                             </div>
                         </div>
-
                         <button type="submit" id="registerBtn" class="login-btn" disabled>Register</button>
                     </form>
 
-                    <form id="forgotForm" style="display: none;">
+                    <!-- FORGOT PASSWORD FORM -->
+                    <form id="forgotForm" style="display:none;">
                         <div class="input-group">
                             <label>Email Address</label>
                             <div class="input-wrapper">
@@ -143,10 +132,11 @@
                             </div>
                         </div>
                         <button type="submit" id="forgotBtn" class="login-btn" disabled>Send Reset Link</button>
-                        <div style="text-align: center; margin-top: 15px;">
-                            <a href="#" onclick="switchTab('login'); return false;" style="font-size: 13px; color: rgba(255,255,255,0.8); text-decoration: none;">Back to Login</a>
+                        <div style="text-align:center;margin-top:15px;">
+                            <a href="#" onclick="switchTab('login');return false;" style="font-size:13px;color:rgba(255,255,255,0.8);text-decoration:none;">Back to Login</a>
                         </div>
                     </form>
+
                 </div>
             </div>
 
@@ -154,6 +144,7 @@
     </div>
 
     <script src="login.js"></script>
+
 </body>
 
 </html>
