@@ -118,7 +118,7 @@ class SimulationController {
 
         // Resolve any active alerts for this ship
         $this->db->prepare("
-            UPDATE alerts SET status='Resolved', resolved_at=?, deskripsi='Dimatikan paksa via Stop PSC.'
+            UPDATE alerts SET status='Resolved', resolved_at=?, deskripsi='Dimatikan paksa via Stop SSCS.'
             WHERE ship_id=? AND status='Active'
         ")->execute([date('d/m/Y H:i:s'), $ship['id']]);
 

@@ -8,11 +8,11 @@ let dashboardChart;
 let monitoringChart;
 
 // ---- State (memory only, truth lives in DB) ----
-let ships          = [];          // full ship list from API
-let alertData      = [];          // all alerts from API
+let ships = [];          // full ship list from API
+let alertData = [];          // all alerts from API
 let selectedShipImo = null;
-let chartLabels    = [];
-let chartData      = [];
+let chartLabels = [];
+let chartData = [];
 
 // ---- Pages ----
 const componentsToLoad = ['navbar', 'dashboard', 'monitoring', 'history', 'alert', 'laporan', 'planning'];
@@ -77,12 +77,12 @@ function renderShipList() {
         if (parseInt(ship.is_stopped)) return;
 
         const isActive = ship.imo === selectedShipImo;
-        const card     = document.createElement('div');
-        const isConn   = parseInt(ship.is_connected);
+        const card = document.createElement('div');
+        const isConn = parseInt(ship.is_connected);
         const hasEnergy = parseFloat(ship.total_energy) > 0;
 
         let dotColor = '#cbd5e1';
-        if (isConn)                    dotColor = '#22c55e';
+        if (isConn) dotColor = '#22c55e';
         else if (!isConn && hasEnergy) dotColor = '#dc2626';
 
         const statusDot = `<span style="width:8px;height:8px;background:${dotColor};border-radius:50%;display:inline-block;margin-right:5px;"></span>`;
@@ -90,7 +90,7 @@ function renderShipList() {
 
         card.style.cssText = `padding:15px;background:white;border-radius:8px;cursor:pointer;transition:0.2s;display:flex;justify-content:space-between;align-items:center;${borderStyle}`;
         if (!isActive) {
-            card.onmouseover  = () => card.style.borderColor = '#256b9c';
+            card.onmouseover = () => card.style.borderColor = '#256b9c';
             card.onmouseleave = () => card.style.borderColor = '#e2e8f0';
         }
         card.onclick = () => selectShip(ship.imo);
@@ -105,6 +105,165 @@ function renderShipList() {
     });
 }
 
+function renderDockIllustration() {
+    const container = document.getElementById('dockIllustrationContainer');
+    if (!container) return;
+
+    // We need 6 ships
+    const ds = ships.slice(0, 6);
+    const s = [null, ds[0]||null, ds[1]||null, ds[2]||null, ds[3]||null, ds[4]||null, ds[5]||null];
+
+    const isStopped = (ship) => !ship || parseInt(ship.is_stopped) === 1;
+    const cc = (ship) => isStopped(ship) ? '#ef4444' : '#22c55e';
+
+    const W = 1100, H = 520;
+    
+    // SVG defs (filters and arrows)
+    const defs = `
+        <defs>
+            <filter id="dk_sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.15)"/></filter>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#22c55e" />
+            </marker>
+            <marker id="arrow-red" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
+            </marker>
+        </defs>
+    `;
+
+    // Background
+    const bg = `<rect width="${W}" height="${H}" rx="10" fill="#f8fafc"/>`;
+
+    // Pier definitions
+    const pierY = 190, pierH = 60;
+    const vX = 120, vW = 110, vY = 250, vH = 270;
+    const pierGray = '#9ca3af';
+    
+    const pier = `
+        <!-- Horizontal Pier -->
+        <rect x="0" y="${pierY}" width="${W}" height="${pierH}" fill="${pierGray}" filter="url(#dk_sh)"/>
+        ${Array.from({length:14},(_,i)=>`<line x1="${i*80+40}" y1="${pierY+10}" x2="${i*80+40}" y2="${pierY+pierH-10}" stroke="#6b7280" stroke-width="1" opacity="0.4"/>`).join('')}
+        <text x="${W/2}" y="${pierY+pierH/2+5}" text-anchor="middle" fill="#f3f4f6" font-size="14" font-weight="800" letter-spacing="6" font-family="Inter,sans-serif">DERMAGA UTAMA</text>
+        <!-- Vertical Pier -->
+        <rect x="${vX}" y="${vY}" width="${vW}" height="${vH}" fill="${pierGray}" filter="url(#dk_sh)"/>
+        ${Array.from({length:6},(_,i)=>`<line x1="${vX+10}" y1="${vY+20+i*40}" x2="${vX+vW-10}" y2="${vY+20+i*40}" stroke="#6b7280" stroke-width="1" opacity="0.4"/>`).join('')}
+    `;
+
+    // Ship data and positions (3 top, 3 bottom)
+    const shipTopLeft = { cx: 320, cy: 100, data: s[1] };
+    const shipTopMid = { cx: 640, cy: 100, data: s[2] };
+    const shipTopRight = { cx: 960, cy: 100, data: s[3] };
+    
+    const shipBotLeft = { cx: 400, cy: 390, data: s[4] };
+    const shipBotMid = { cx: 720, cy: 390, data: s[5] };
+    const shipBotRight = { cx: 1040, cy: 390, data: s[6] };
+
+    // Draw front-facing ship icon (like user image 2)
+    const drawShip = (cx, cy, ship) => {
+        if (!ship) {
+            return `
+                <rect x="${cx-32}" y="${cy-40}" width="64" height="80" rx="8" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6,4"/>
+                <text x="${cx}" y="${cy+5}" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Slot Kosong</text>
+            `;
+        }
+        const stopped = isStopped(ship);
+        const baseColor = stopped ? '#64748b' : '#0f172a';
+        const lineColor = stopped ? '#cbd5e1' : '#ffffff';
+        const stTxt   = stopped ? '● Disconnected' : '● Connected';
+        const stClr   = stopped ? '#ef4444' : '#22c55e';
+        const lbl = ship.name.length > 15 ? ship.name.substring(0,13)+'…' : ship.name;
+
+        return `
+            <g transform="translate(${cx - 32}, ${cy - 40})">
+              <!-- Funnel/Top -->
+              <rect x="24" y="0" width="16" height="8" fill="${baseColor}"/>
+              <rect x="20" y="10" width="24" height="10" fill="${baseColor}"/>
+              <!-- Superstructure -->
+              <path d="M 16,30 Q 16,22 24,22 L 40,22 Q 48,22 48,30 L 48,32 L 16,32 Z" fill="${baseColor}"/>
+              <!-- Bridge -->
+              <polygon points="10,34 54,34 56,48 8,48" fill="${baseColor}"/>
+              <rect x="14" y="38" width="12" height="4" rx="2" fill="${lineColor}"/>
+              <rect x="38" y="38" width="12" height="4" rx="2" fill="${lineColor}"/>
+              <!-- Hull -->
+              <polygon points="8,50 56,50 64,64 48,80 16,80 0,64" fill="${baseColor}"/>
+              <!-- Bow V-lines -->
+              <polyline points="-1,64 32,50 65,64" fill="none" stroke="${lineColor}" stroke-width="3" stroke-linejoin="round"/>
+              <line x1="32" y1="50" x2="32" y2="81" stroke="${lineColor}" stroke-width="3"/>
+            </g>
+            <text x="${cx}" y="${cy + 55}" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="700" font-family="Inter,sans-serif">${lbl}</text>
+            <text x="${cx}" y="${cy + 68}" text-anchor="middle" fill="${stClr}" font-size="9" font-weight="600" font-family="Inter,sans-serif">${stTxt}</text>
+        `;
+    };
+
+    // Draw SSCS Box
+    const drawPower = (bx, by, label) => {
+        return `
+            <rect x="${bx}" y="${by}" width="70" height="60" rx="6" fill="#0f172a" stroke="#1e40af" stroke-width="2" filter="url(#dk_sh)"/>
+            <text x="${bx+35}" y="${by+32}" text-anchor="middle" fill="#facc15" font-size="18" font-family="Arial">⚡</text>
+            <text x="${bx+35}" y="${by+48}" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700" font-family="Inter,sans-serif">${label}</text>
+        `;
+    };
+
+    // Draw Cable path with explicit direction/arrows
+    const drawCable = (path, color, animated) => {
+        const arrowId = color === '#22c55e' ? 'arrow-green' : 'arrow-red';
+        const flow = animated ? `<animate attributeName="stroke-dashoffset" from="24" to="0" dur="0.6s" repeatCount="indefinite"/>` : '';
+        return `
+            <path d="${path}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#${arrowId})"/>
+            ${animated ? `<path d="${path}" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,18">${flow}</path>` : ''}
+        `;
+    };
+
+    // Cable routing paths (distinct coordinates to prevent overlapping)
+    const pathS1 = `M 90,305 L 130,305 L 130,205 L 320,205 L 320,148`; // SSCS 1 top to Ship 1
+    const pathS2 = `M 90,320 L 145,320 L 145,220 L 640,220 L 640,148`; // SSCS 1 mid to Ship 2
+    const pathS3 = `M 90,335 L 160,335 L 160,235 L 960,235 L 960,148`; // SSCS 1 bot to Ship 3
+
+    const pathS4 = `M 90,415 L 175,415 L 175,280 L 400,280 L 400,342`; // SSCS 2 top to Ship 4
+    const pathS5 = `M 90,430 L 190,430 L 190,300 L 720,300 L 720,342`; // SSCS 2 mid to Ship 5
+    const pathS6 = `M 90,445 L 205,445 L 205,320 L 1040,320 L 1040,342`; // SSCS 2 bot to Ship 6
+
+    container.innerHTML = `<div style="width:100%;overflow-x:auto;">
+        <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+            ${defs}
+            ${bg}
+            
+            <!-- 1. Pier drawn first (background) -->
+            ${pier}
+
+            <!-- 2. Cables drawn ON TOP of the Pier -->
+            ${drawCable(pathS1, cc(s[1]), !isStopped(s[1]))}
+            ${drawCable(pathS2, cc(s[2]), !isStopped(s[2]))}
+            ${drawCable(pathS3, cc(s[3]), !isStopped(s[3]))}
+            ${drawCable(pathS4, cc(s[4]), !isStopped(s[4]))}
+            ${drawCable(pathS5, cc(s[5]), !isStopped(s[5]))}
+            ${drawCable(pathS6, cc(s[6]), !isStopped(s[6]))}
+
+            <!-- 3. SSCS Units and Ships drawn last so they sit on top of cables -->
+            ${drawPower(20, 290, 'SSCS 1')}
+            ${drawPower(20, 400, 'SSCS 2')}
+            
+            ${drawShip(shipTopLeft.cx, shipTopLeft.cy, shipTopLeft.data)}
+            ${drawShip(shipTopMid.cx, shipTopMid.cy, shipTopMid.data)}
+            ${drawShip(shipTopRight.cx, shipTopRight.cy, shipTopRight.data)}
+            
+            ${drawShip(shipBotLeft.cx, shipBotLeft.cy, shipBotLeft.data)}
+            ${drawShip(shipBotMid.cx, shipBotMid.cy, shipBotMid.data)}
+            ${drawShip(shipBotRight.cx, shipBotRight.cy, shipBotRight.data)}
+
+            <!-- Legend -->
+            <g transform="translate(${W-205},${H-65})">
+                <rect width="190" height="50" rx="6" fill="white" opacity="0.9" stroke="#e2e8f0" stroke-width="1"/>
+                <line x1="12" y1="15" x2="32" y2="15" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+                <text x="40" y="19" fill="#374151" font-size="10" font-family="Inter,sans-serif">Kabel Aktif (Terhubung)</text>
+                <line x1="12" y1="35" x2="32" y2="35" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+                <text x="40" y="39" fill="#374151" font-size="10" font-family="Inter,sans-serif">Kabel Terputus (Stop SSCS)</text>
+            </g>
+        </svg>
+    </div>`;
+}
+
+
 function selectShip(imo) {
     const ship = ships.find(s => s.imo === imo);
     if (!ship) return;
@@ -112,17 +271,17 @@ function selectShip(imo) {
     selectedShipImo = imo;
 
     const el = id => document.getElementById(id);
-    if (el('shipName'))  el('shipName').innerText  = ship.name;
-    if (el('shipType'))  el('shipType').innerText  = ship.type;
-    if (el('shipIMO'))   el('shipIMO').innerText   = ship.imo;
+    if (el('shipName')) el('shipName').innerText = ship.name;
+    if (el('shipType')) el('shipType').innerText = ship.type;
+    if (el('shipIMO')) el('shipIMO').innerText = ship.imo;
 
     const isConn = parseInt(ship.is_connected);
     const energy = parseFloat(ship.total_energy);
-    const power  = parseFloat(ship.realtime_power);
+    const power = parseFloat(ship.realtime_power);
 
     if (el('realtimePower')) el('realtimePower').innerText = power.toLocaleString() + ' kW';
-    if (el('totalEnergy'))   el('totalEnergy').innerText   = energy.toLocaleString() + ' kWh';
-    if (el('co2Saved'))      el('co2Saved').innerText      = (energy * 0.0027).toFixed(2) + ' kg';
+    if (el('totalEnergy')) el('totalEnergy').innerText = energy.toLocaleString() + ' kWh';
+    if (el('co2Saved')) el('co2Saved').innerText = (energy * 0.0027).toFixed(2) + ' kg';
 
     const alertSpan = el('alertCount');
     if (alertSpan) {
@@ -164,11 +323,11 @@ function startSimulationPolling() {
             const stats = res.globalStats;
 
             // Update global dashboard stats
-            setInner('globalTotalKapal',    stats.monitoredCount);
+            setInner('globalTotalKapal', stats.monitoredCount);
             setInner('globalKapalTerhubung', stats.activeConnections);
             setInner('globalRealtimeEnergy', stats.globalRealtimeSum.toLocaleString() + ' kW');
-            setInner('globalTotalEnergy',    stats.globalTotalEnergy.toLocaleString() + ' kWh');
-            setInner('globalCO2Saved',       stats.globalCO2 + ' kg');
+            setInner('globalTotalEnergy', stats.globalTotalEnergy.toLocaleString() + ' kWh');
+            setInner('globalCO2Saved', stats.globalCO2 + ' kg');
 
             // kapalTerhubung (legacy id)
             setInner('kapalTerhubung', stats.activeConnections + ' Kapal');
@@ -204,6 +363,7 @@ function startSimulationPolling() {
             }
 
             renderShipList();
+            renderDockIllustration();
 
         } catch (e) {
             console.error('Simulation tick error:', e);
@@ -214,19 +374,19 @@ function startSimulationPolling() {
 function updateMonitoringPanel(ship) {
     const isConn = parseInt(ship.is_connected);
     const energy = parseFloat(ship.total_energy);
-    const power  = parseFloat(ship.realtime_power);
+    const power = parseFloat(ship.realtime_power);
 
-    setInner('realtimePower', power.toLocaleString()  + ' kW');
-    setInner('totalEnergy',   energy.toLocaleString() + ' kWh');
-    setInner('co2Saved',      (energy * 0.0027).toFixed(2) + ' kg');
+    setInner('realtimePower', power.toLocaleString() + ' kW');
+    setInner('totalEnergy', energy.toLocaleString() + ' kWh');
+    setInner('co2Saved', (energy * 0.0027).toFixed(2) + ' kg');
 
     const alertSpan = document.getElementById('alertCount');
     if (alertSpan) {
         alertSpan.innerText = alertData.filter(a => a.imo === ship.imo && a.status === 'Active').length;
     }
 
-    const indic   = document.getElementById('pscStatusIndicator');
-    const pscSt   = document.getElementById('pscStatus');
+    const indic = document.getElementById('pscStatusIndicator');
+    const pscSt = document.getElementById('pscStatus');
     const discBtn = document.getElementById('disconnectPscBtn');
 
     if (indic) {
@@ -234,12 +394,12 @@ function updateMonitoringPanel(ship) {
             indic.className = 'success'; indic.innerText = 'Aman';
             indic.style.background = '#def7ec'; indic.style.color = '#03543f';
             if (discBtn) discBtn.style.display = 'flex';
-            if (pscSt)   pscSt.innerText = 'Connected';
+            if (pscSt) pscSt.innerText = 'Connected';
         } else {
             indic.className = 'danger'; indic.innerText = 'Bahaya';
             indic.style.background = '#fde8e8'; indic.style.color = '#9b1c1c';
             if (discBtn) discBtn.style.display = 'none';
-            if (pscSt)   pscSt.innerText = 'Disconnected';
+            if (pscSt) pscSt.innerText = 'Disconnected';
         }
     }
 
@@ -259,16 +419,16 @@ function updateMonitoringPanel(ship) {
 // ==============================================================
 function normalizeAlert(a) {
     return {
-        id:          a.id,
-        ship:        a.ship || a.ship_name,
-        imo:         a.imo,
-        jenis:       a.jenis,
-        level:       a.level,
-        status:      a.status,
+        id: a.id,
+        ship: a.ship || a.ship_name,
+        imo: a.imo,
+        jenis: a.jenis,
+        level: a.level,
+        status: a.status,
         startTimeMs: parseInt(a.start_time_ms),
-        waktu:       a.waktu,
-        resolvedAt:  a.resolved_at,
-        deskripsi:   a.deskripsi,
+        waktu: a.waktu,
+        resolvedAt: a.resolved_at,
+        deskripsi: a.deskripsi,
     };
 }
 
@@ -285,15 +445,15 @@ async function loadAlerts() {
 
 function updateAlertCounts(counts) {
     if (!counts) return;
-    setInner('totalAlert',    counts.total       || 0);
-    setInner('activeAlert',   counts.active_count  || 0);
+    setInner('totalAlert', counts.total || 0);
+    setInner('activeAlert', counts.active_count || 0);
     setInner('criticalAlert', counts.critical_count || 0);
 }
 
 function renderAlert() {
-    const tbody        = document.getElementById('alertList');
+    const tbody = document.getElementById('alertList');
     const historyTbody = document.getElementById('alertHistoryList');
-    if (tbody)        tbody.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
     if (historyTbody) historyTbody.innerHTML = '';
 
     let criticalCount = 0, activeCount = 0;
@@ -301,28 +461,28 @@ function renderAlert() {
         if (item.status === 'Active') { activeCount++; if (item.level === 'Critical') criticalCount++; }
     });
 
-    setInner('totalAlert',    alertData.length);
-    setInner('activeAlert',   activeCount);
+    setInner('totalAlert', alertData.length);
+    setInner('activeAlert', activeCount);
     setInner('criticalAlert', criticalCount);
 
-    const activeAlerts   = alertData.filter(a => a.status === 'Active').reverse();
+    const activeAlerts = alertData.filter(a => a.status === 'Active').reverse();
     const resolvedAlerts = alertData.filter(a => a.status === 'Resolved').slice(-20).reverse();
 
     const levelStyle = level => {
         if (level === 'Critical') return 'font-weight:600;color:#7f1d1d;';
-        if (level === 'High')     return 'font-weight:600;color:#dc2626;';
-        if (level === 'Medium')   return 'font-weight:600;color:#ea580c;';
+        if (level === 'High') return 'font-weight:600;color:#dc2626;';
+        if (level === 'Medium') return 'font-weight:600;color:#ea580c;';
         return 'font-weight:600;color:#ca8a04;';
     };
     const levelIcon = level => ({ Critical: '🚨', High: '🔴', Medium: '🟠', Low: '🟡' })[level] || '';
 
     if (tbody) {
         activeAlerts.forEach(item => {
-            const durationMs  = Date.now() - (item.startTimeMs || Date.now());
-            const durHours    = Math.floor(durationMs / 3600000);
-            const durMins     = Math.floor((durationMs % 3600000) / 60000);
-            const durText     = durHours > 0 ? `${durHours} Jam ${durMins} Menit` : `${durMins} Menit`;
-            const row         = document.createElement('tr');
+            const durationMs = Date.now() - (item.startTimeMs || Date.now());
+            const durHours = Math.floor(durationMs / 3600000);
+            const durMins = Math.floor((durationMs % 3600000) / 60000);
+            const durText = durHours > 0 ? `${durHours} Jam ${durMins} Menit` : `${durMins} Menit`;
+            const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.id}</td>
                 <td><span style="font-weight:600;color:#1e293b;">${item.ship}</span></td>
@@ -368,7 +528,7 @@ async function resolveAlert(id) {
 }
 
 // ==============================================================
-// STOP PSC
+// STOP SSCS
 // ==============================================================
 async function stopPsc(imo, alertId) {
     const res = await api.post(`/simulation/stop/${imo}`);
@@ -382,9 +542,10 @@ async function stopPsc(imo, alertId) {
         }
         renderAlert();
         renderShipList();
-        showToast('Koneksi PSC Kapal Berhasil Dihentikan.', 'success');
+        renderDockIllustration();
+        showToast('Koneksi SSCS Kapal Berhasil Dihentikan.', 'success');
     } else {
-        showToast(res.message || 'Gagal hentikan PSC.', 'error');
+        showToast(res.message || 'Gagal hentikan SSCS.', 'error');
     }
 }
 
@@ -419,16 +580,16 @@ function openAlertDetail(id) {
     }
 
     const durationMs = Date.now() - (alertObj.startTimeMs || Date.now());
-    const durMins    = Math.max(1, Math.floor(durationMs / 60000));
-    const durText    = alertObj.status === 'Active' ? durMins + ' Menit' : 'Resolved';
+    const durMins = Math.max(1, Math.floor(durationMs / 60000));
+    const durText = alertObj.status === 'Active' ? durMins + ' Menit' : 'Resolved';
     const isResolved = alertObj.status === 'Resolved';
 
-    const ship       = ships.find(s => s.imo === alertObj.imo) || {};
+    const ship = ships.find(s => s.imo === alertObj.imo) || {};
     const energiTerpakai = parseFloat(ship.total_energy || 0).toLocaleString();
-    const dayaSaatIni    = parseFloat(ship.realtime_power || 0);
-    const co2Reduksi     = (parseFloat(ship.total_energy || 0) * 0.05).toFixed(2);
-    const dayaRata       = Math.max(200, dayaSaatIni - 25);
-    const sttPscText  = alertObj.status === 'Active' ? 'Aktif' : 'Nonaktif';
+    const dayaSaatIni = parseFloat(ship.realtime_power || 0);
+    const co2Reduksi = (parseFloat(ship.total_energy || 0) * 0.05).toFixed(2);
+    const dayaRata = Math.max(200, dayaSaatIni - 25);
+    const sttPscText = alertObj.status === 'Active' ? 'Aktif' : 'Nonaktif';
     const sttPscColor = alertObj.status === 'Active' ? '#16a34a' : '#64748b';
 
     document.getElementById('alertDetailContent').innerHTML = `
@@ -484,7 +645,7 @@ function openAlertDetail(id) {
                         <span style="color:#64748b;">Daya Saat Ini</span><span style="color:#1e293b;font-weight:600;">${dayaSaatIni} kW</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#64748b;">Status PSC</span><span style="color:${sttPscColor};font-weight:600;">${sttPscText}</span>
+                        <span style="color:#64748b;">Status SSCS</span><span style="color:${sttPscColor};font-weight:600;">${sttPscText}</span>
                     </div>
                 </div>
             </div>
@@ -502,7 +663,7 @@ function openAlertDetail(id) {
                 </button>
                 `}
                 <button onclick="animateStopPsc('${alertObj.imo}','${alertObj.id}')" style="flex:1;padding:14px;background:#dc2626;border:none;border-radius:8px;font-weight:600;color:white;cursor:pointer;">
-                    <i class="fa-solid fa-power-off" style="margin-right:8px;font-size:16px;"></i>Stop PSC
+                    <i class="fa-solid fa-power-off" style="margin-right:8px;font-size:16px;"></i>Stop SSCS
                 </button>
             </div>
         </div>
@@ -527,7 +688,7 @@ function showActionAnimation(type, callback) {
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;display:flex;justify-content:center;align-items:center;background:rgba(255,255,255,0.8);backdrop-filter:blur(4px);transition:opacity 0.3s;';
     const iconHTML = type === 'resolve'
         ? `<div style="font-size:80px;color:#16a34a;"><i class="fa-solid fa-circle-check"></i></div><div style="margin-top:20px;font-size:24px;font-weight:bold;color:#16a34a;">Berhasil Diatasi!</div>`
-        : `<div style="font-size:80px;color:#dc2626;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-plug" style="transform:rotate(90deg);"></i><i class="fa-solid fa-bolt" style="color:#f59e0b;font-size:40px;margin:0 5px;"></i><i class="fa-solid fa-plug" style="transform:rotate(-90deg);"></i></div><div style="margin-top:20px;font-size:24px;font-weight:bold;color:#dc2626;">Koneksi PSC Terputus!</div>`;
+        : `<div style="font-size:80px;color:#dc2626;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-plug" style="transform:rotate(90deg);"></i><i class="fa-solid fa-bolt" style="color:#f59e0b;font-size:40px;margin:0 5px;"></i><i class="fa-solid fa-plug" style="transform:rotate(-90deg);"></i></div><div style="margin-top:20px;font-size:24px;font-weight:bold;color:#dc2626;">Koneksi SSCS Terputus!</div>`;
     const content = document.createElement('div');
     content.style.cssText = 'text-align:center;display:flex;flex-direction:column;align-items:center;';
     content.innerHTML = iconHTML;
@@ -546,7 +707,7 @@ function showAlert(alertObj) {
     let levelColor = '#ef4444';
     if (alertObj.level === 'Critical') levelColor = '#b91c1c';
     else if (alertObj.level === 'Medium') levelColor = '#f97316';
-    else if (alertObj.level === 'Low')   levelColor = '#eab308';
+    else if (alertObj.level === 'Low') levelColor = '#eab308';
 
     modal.innerHTML = `
         <div class="modal-content" style="border-left:5px solid ${levelColor};border-radius:8px;width:400px;max-width:90%;background:white;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,0.2);">
@@ -578,16 +739,16 @@ function closeModal() {
 // HISTORY
 // ==============================================================
 async function renderHistory() {
-    const tbody  = document.getElementById('historyList');
+    const tbody = document.getElementById('historyList');
     if (!tbody) return;
 
-    const dateF   = document.getElementById('filterDate')?.value   || '';
-    const imoF    = document.getElementById('filterShip')?.value   || '';
+    const dateF = document.getElementById('filterDate')?.value || '';
+    const imoF = document.getElementById('filterShip')?.value || '';
     const searchF = (document.getElementById('filterSearch')?.value || '').toLowerCase().trim();
 
     const params = new URLSearchParams();
     if (dateF) params.set('date', dateF);
-    if (imoF)  params.set('imo',  imoF);
+    if (imoF) params.set('imo', imoF);
 
     const res = await api.get('/history?' + params.toString());
     if (!res.success) return;
@@ -618,9 +779,9 @@ async function renderHistory() {
         tbody.appendChild(row);
     });
 
-    setInner('totalTransaksi',    summary.total       || 0);
+    setInner('totalTransaksi', summary.total || 0);
     setInner('totalEnergiHistory', parseFloat(summary.total_energy || 0).toLocaleString() + ' kWh');
-    setInner('totalCO2History',    parseFloat(summary.total_co2    || 0).toFixed(2) + ' kg');
+    setInner('totalCO2History', parseFloat(summary.total_co2 || 0).toFixed(2) + ' kg');
 
     // Disconnected only table
     const tbodyDisc = document.getElementById('historyDisconnectedList');
@@ -648,7 +809,7 @@ async function renderHistoryShipFilter() {
     filterShip.innerHTML = '<option value="">Semua Kapal</option>';
     ships.forEach(ship => {
         const opt = document.createElement('option');
-        opt.value    = ship.imo;
+        opt.value = ship.imo;
         opt.innerText = ship.name;
         filterShip.appendChild(opt);
     });
@@ -700,7 +861,7 @@ function renderPlanningList(data) {
             <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:16px;">
                 <button onclick="runPlanning(${p.id})" title="Jalankan" style="background:#22c55e;color:white;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-play"></i> Run</button>
                 <button onclick="editPlanning(${p.id})" title="Edit" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="deletePlanning(${p.id}, '${p.name.replace(/'/g,'\\&apos;')}')" title="Hapus" style="background:#fef2f2;color:#ef4444;border:1px solid #fecaca;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="deletePlanning(${p.id}, '${p.name.replace(/'/g, '\\&apos;')}')" title="Hapus" style="background:#fef2f2;color:#ef4444;border:1px solid #fecaca;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
         list.appendChild(li);
@@ -708,15 +869,15 @@ function renderPlanningList(data) {
 }
 
 async function addPlanning() {
-    const name     = document.getElementById('planShipName').value.trim();
-    const dermaga  = document.getElementById('planDermaga').value;
-    const date     = document.getElementById('planDate').value.replace('T', ' ');
-    const etd      = document.getElementById('planEtd').value.replace('T', ' ');
-    const no_ppk   = document.getElementById('planNoPpk').value.trim();
-    const no_prc   = document.getElementById('planNoPrc').value.trim();
+    const name = document.getElementById('planShipName').value.trim();
+    const dermaga = document.getElementById('planDermaga').value;
+    const date = document.getElementById('planDate').value.replace('T', ' ');
+    const etd = document.getElementById('planEtd').value.replace('T', ' ');
+    const no_ppk = document.getElementById('planNoPpk').value.trim();
+    const no_prc = document.getElementById('planNoPrc').value.trim();
     const kegiatan = document.getElementById('planKegiatan').value;
-    const grt      = document.getElementById('planGrt').value;
-    const loa      = document.getElementById('planLoa').value;
+    const grt = document.getElementById('planGrt').value;
+    const loa = document.getElementById('planLoa').value;
 
     if (!name || !dermaga || !date) {
         showToast('Nama kapal, dermaga, dan ETA wajib diisi!', 'error'); return;
@@ -724,7 +885,7 @@ async function addPlanning() {
 
     const res = await api.post('/planning', { name, dermaga, date, etd, no_ppk, no_prc, kegiatan, grt, loa });
     if (res.success) {
-        ['planShipName','planDermaga','planDate','planEtd','planNoPpk','planNoPrc','planGrt','planLoa'].forEach(id => {
+        ['planShipName', 'planDermaga', 'planDate', 'planEtd', 'planNoPpk', 'planNoPrc', 'planGrt', 'planLoa'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
@@ -743,6 +904,7 @@ async function runPlanning(id) {
         showToast(res.message, 'success');
         loadPlanning();
         renderShipList();
+        renderDockIllustration();
         renderReportShipList();
         renderHistoryShipFilter();
     } else {
@@ -755,16 +917,16 @@ function editPlanning(id) {
     const plan = window._planningData?.find(p => p.id == id);
     if (!plan) { showToast('Data tidak ditemukan.', 'error'); return; }
 
-    document.getElementById('editPlanId').value       = plan.id;
+    document.getElementById('editPlanId').value = plan.id;
     document.getElementById('editPlanShipName').value = plan.name;
-    document.getElementById('editPlanDermaga').value  = plan.dermaga;
-    document.getElementById('editPlanDate').value     = (plan.date || '').replace(' ', 'T');
-    document.getElementById('editPlanEtd').value      = (plan.etd || '').replace(' ', 'T');
-    document.getElementById('editPlanNoPpk').value    = plan.no_ppk || '';
-    document.getElementById('editPlanNoPrc').value    = plan.no_prc || '';
+    document.getElementById('editPlanDermaga').value = plan.dermaga;
+    document.getElementById('editPlanDate').value = (plan.date || '').replace(' ', 'T');
+    document.getElementById('editPlanEtd').value = (plan.etd || '').replace(' ', 'T');
+    document.getElementById('editPlanNoPpk').value = plan.no_ppk || '';
+    document.getElementById('editPlanNoPrc').value = plan.no_prc || '';
     document.getElementById('editPlanKegiatan').value = plan.kegiatan || 'BONGKAR';
-    document.getElementById('editPlanGrt').value      = plan.grt || '';
-    document.getElementById('editPlanLoa').value      = plan.loa || '';
+    document.getElementById('editPlanGrt').value = plan.grt || '';
+    document.getElementById('editPlanLoa').value = plan.loa || '';
 
     document.getElementById('planEditModal').classList.add('active');
 }
@@ -774,16 +936,16 @@ function closePlanEditModal() {
 }
 
 async function submitEditPlanning() {
-    const id       = document.getElementById('editPlanId').value;
-    const name     = document.getElementById('editPlanShipName').value.trim();
-    const dermaga  = document.getElementById('editPlanDermaga').value;
-    const date     = document.getElementById('editPlanDate').value.replace('T', ' ');
-    const etd      = document.getElementById('editPlanEtd').value.replace('T', ' ');
-    const no_ppk   = document.getElementById('editPlanNoPpk').value.trim();
-    const no_prc   = document.getElementById('editPlanNoPrc').value.trim();
+    const id = document.getElementById('editPlanId').value;
+    const name = document.getElementById('editPlanShipName').value.trim();
+    const dermaga = document.getElementById('editPlanDermaga').value;
+    const date = document.getElementById('editPlanDate').value.replace('T', ' ');
+    const etd = document.getElementById('editPlanEtd').value.replace('T', ' ');
+    const no_ppk = document.getElementById('editPlanNoPpk').value.trim();
+    const no_prc = document.getElementById('editPlanNoPrc').value.trim();
     const kegiatan = document.getElementById('editPlanKegiatan').value;
-    const grt      = document.getElementById('editPlanGrt').value;
-    const loa      = document.getElementById('editPlanLoa').value;
+    const grt = document.getElementById('editPlanGrt').value;
+    const loa = document.getElementById('editPlanLoa').value;
 
     if (!name || !dermaga || !date) {
         showToast('Nama kapal, dermaga, dan ETA wajib diisi!', 'error'); return;
@@ -852,7 +1014,7 @@ async function downloadShipReport(imo) {
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    link.href  = URL.createObjectURL(blob);
+    link.href = URL.createObjectURL(blob);
     link.download = `Report_${ship.name.replace(/\s+/g, '_')}.csv`;
     link.click();
 }
@@ -866,8 +1028,8 @@ async function downloadReport() {
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    link.href  = URL.createObjectURL(blob);
-    link.download = 'PSC_Daily_Report.csv';
+    link.href = URL.createObjectURL(blob);
+    link.download = 'SSCS_Daily_Report.csv';
     link.click();
 }
 
@@ -876,8 +1038,8 @@ async function downloadReport() {
 // ==============================================================
 let toastTimeout;
 function showToast(message, type = 'success') {
-    const toast  = document.getElementById('toastNotification');
-    const msgEl  = document.getElementById('toastMessage');
+    const toast = document.getElementById('toastNotification');
+    const msgEl = document.getElementById('toastMessage');
     const iconEl = document.getElementById('toastIcon');
     if (!toast || !msgEl || !iconEl) return;
     msgEl.innerText = message;

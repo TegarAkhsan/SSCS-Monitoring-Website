@@ -78,7 +78,7 @@ sscs-monitoring/
 | GET | `/backend/auth/me` | Cek session |
 | GET | `/backend/ships` | List kapal |
 | POST | `/backend/ships` | Tambah kapal |
-| POST | `/backend/ships/{imo}/stop` | Stop PSC |
+| POST | `/backend/ships/{imo}/stop` | Stop SSCS |
 | GET | `/backend/alerts` | List alert |
 | PUT | `/backend/alerts/{id}/resolve` | Resolve alert |
 | GET | `/backend/history` | Riwayat sesi |
@@ -86,4 +86,4 @@ sscs-monitoring/
 | POST | `/backend/planning` | Tambah jadwal |
 | POST | `/backend/planning/{id}/run` | Jalankan jadwal |
 | GET | `/backend/simulation/tick` | Tick simulasi (poll 3s) |
-| POST | `/backend/simulation/stop/{imo}` | Stop PSC via simulasi |
+| POST | `/backend/simulation/stop/{imo}` | Stop SSCS via simulasi |
