@@ -9,6 +9,27 @@ class Planning {
 
     public function __construct() {
         $this->db = Database::getInstance();
+        $this->checkAndMigrateSchema();
+    }
+
+    private function checkAndMigrateSchema(): void {
+        try {
+            // Check if 'etd' exists
+            $this->db->query("SELECT etd FROM planning LIMIT 1");
+        } catch (PDOException $e) {
+            // If column doesn't exist, it will throw an exception. Add missing columns.
+            try {
+                $this->db->exec("ALTER TABLE planning 
+                    ADD COLUMN etd VARCHAR(50) DEFAULT NULL, 
+                    ADD COLUMN no_ppk VARCHAR(50) DEFAULT NULL, 
+                    ADD COLUMN no_prc VARCHAR(50) DEFAULT NULL, 
+                    ADD COLUMN kegiatan VARCHAR(50) DEFAULT 'BONGKAR', 
+                    ADD COLUMN grt INT(11) DEFAULT 0, 
+                    ADD COLUMN loa DECIMAL(7,2) DEFAULT 0.00;");
+            } catch (PDOException $e2) {
+                // Ignore if it fails (e.g., partial columns exist)
+            }
+        }
     }
 
     public function getAll(string $status = 'scheduled'): array {

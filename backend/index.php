@@ -8,6 +8,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Set timezone and hide HTML errors to ensure clean JSON responses
+date_default_timezone_set('Asia/Jakarta');
+ini_set('display_errors', '0');
+
 // Set JSON content type
 header('Content-Type: application/json; charset=utf-8');
 
